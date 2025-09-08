@@ -1,0 +1,284 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@inject SignInManager<Users> SignInManager;
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="overlay"></div>
+    <div class="hero-content text-center">
+        <h1 class="display-3 fw-bold text-white">Welcome to TanuiApp</h1>
+        <p class="lead text-light fs-4">Your Campus Marketplace - Buy, Sell, and Trade with Fellow Students</p>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <div class="mt-4">
+                <a asp-controller="Products" asp-action="Index" class="btn btn-light btn-lg me-3 shadow">
+                    <i class="bi bi-shop me-2"></i>Browse Products
+                </a>
+                <a asp-controller="Seller" asp-action="AddProduct" class="btn btn-outline-light btn-lg shadow">
+                    <i class="bi bi-plus-circle me-2"></i>Sell Your Items
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="mt-4">
+                <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg me-3 shadow">
+                    <i class="bi bi-person-plus me-2"></i>Join Now
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-lg shadow">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Stats Section -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="bi bi-people-fill text-success fs-1"></i>
+                    <h4 class="fw-bold text-success mt-2">5,000+</h4>
+                    <p class="text-muted">Active Students</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="bi bi-box-seam text-success fs-1"></i>
+                    <h4 class="fw-bold text-success mt-2">10,000+</h4>
+                    <p class="text-muted">Products Listed</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="bi bi-currency-dollar text-success fs-1"></i>
+                    <h4 class="fw-bold text-success mt-2">$50,000+</h4>
+                    <p class="text-muted">Total Sales</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="bi bi-star-fill text-success fs-1"></i>
+                    <h4 class="fw-bold text-success mt-2">4.8/5</h4>
+                    <p class="text-muted">User Rating</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5 text-success">How TanuiApp Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person-plus-fill text-white fs-2"></i>
+                    </div>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fs-6">1</span>
+                </div>
+                <h4 class="fw-bold">Create Account</h4>
+                <p class="text-muted">Sign up with your student email and verify your campus affiliation for secure trading.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-search text-white fs-2"></i>
+                    </div>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fs-6">2</span>
+                </div>
+                <h4 class="fw-bold">Browse & Buy</h4>
+                <p class="text-muted">Search through thousands of items from textbooks to electronics, all from verified students.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-plus-circle-fill text-white fs-2"></i>
+                    </div>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fs-6">3</span>
+                </div>
+                <h4 class="fw-bold">List & Sell</h4>
+                <p class="text-muted">Upload photos, set your price, and sell items you no longer need to fellow students.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Categories Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5 text-success">Popular Categories</h2>
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm category-card">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-book-fill text-success fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Textbooks</h5>
+                        <p class="text-muted small">Save up to 70% on used textbooks</p>
+                        <a asp-controller="Products" asp-action="Category" asp-route-category="books" class="btn btn-outline-success btn-sm">
+                            Browse Books
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm category-card">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-laptop text-success fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Electronics</h5>
+                        <p class="text-muted small">Laptops, phones, and gadgets</p>
+                        <a asp-controller="Products" asp-action="Category" asp-route-category="electronics" class="btn btn-outline-success btn-sm">
+                            Shop Electronics
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm category-card">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-bag-fill text-success fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Fashion</h5>
+                        <p class="text-muted small">Clothing and accessories</p>
+                        <a asp-controller="Products" asp-action="Category" asp-route-category="clothing" class="btn btn-outline-success btn-sm">
+                            Shop Fashion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm category-card">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-house-fill text-success fs-1 mb-3"></i>
+                        <h5 class="fw-bold">Dorm Essentials</h5>
+                        <p class="text-muted small">Furniture and dorm supplies</p>
+                        <a asp-controller="Products" asp-action="Category" asp-route-category="dorm" class="btn btn-outline-success btn-sm">
+                            Shop Essentials
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5 text-success">Why Choose TanuiApp?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-shield-check text-success fs-1 mb-3"></i>
+                        <h5 class="card-title fw-bold">Secure Trading</h5>
+                        <p class="card-text">All users verified with student emails. Safe payment processing and buyer protection.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-geo-alt-fill text-success fs-1 mb-3"></i>
+                        <h5 class="card-title fw-bold">Local Pickup</h5>
+                        <p class="card-text">Meet on campus for easy and convenient item exchanges. No shipping hassles.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-chat-dots-fill text-success fs-1 mb-3"></i>
+                        <h5 class="card-title fw-bold">Direct Messaging</h5>
+                        <p class="card-text">Chat directly with buyers and sellers to negotiate prices and arrange meetups.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5 text-success">What Students Say</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <p class="card-text">"Saved so much money on textbooks! Found all my required books at half the price."</p>
+                        <footer class="blockquote-footer">Sarah M. <cite title="Source Title">Computer Science Student</cite></footer>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <p class="card-text">"Sold my old laptop in just two days! The platform is easy to use and secure."</p>
+                        <footer class="blockquote-footer">Mike R. <cite title="Source Title">Business Major</cite></footer>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <i class="bi bi-star-fill text-warning"></i>
+                        </div>
+                        <p class="card-text">"Great way to furnish my dorm room on a budget. Found everything I needed!"</p>
+                        <footer class="blockquote-footer">Emma L. <cite title="Source Title">Freshman</cite></footer>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call-to-Action -->
+<section class="py-5 bg-success text-white text-center">
+    <div class="container">
+        <h2 class="fw-bold mb-3">Ready to Start Trading?</h2>
+        <p class="lead mb-4">Join thousands of students who are already buying and selling on TanuiApp</p>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <div>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-light btn-lg me-3">
+                    <i class="bi bi-shop me-2"></i>Start Shopping
+                </a>
+                <a asp-controller="Seller" asp-action="AddProduct" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>List an Item
+                </a>
+            </div>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg">
+                <i class="bi bi-person-plus me-2"></i>Get Started Today
+            </a>
+        }
+    </div>
+</section>
