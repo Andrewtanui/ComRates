@@ -18,7 +18,8 @@ html {
 }
 
 body {
-    margin-bottom: 60px;
+    padding-top: 70px; /* added for fixed navbar spacing */
+    margin-bottom: 60px; /* footer spacing */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -427,3 +428,14 @@ body {
         left: 100%;
     }
 }
+
+.category-card {
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+    .category-card:hover {
+        background-color: #198754;
+        color: white;
+        transform: translateY(-5px);
+    }

@@ -9,7 +9,7 @@
 <div class="hero-section">
     <div class="overlay"></div>
     <div class="hero-content text-center">
-        <h1 class="display-3 fw-bold text-white">Welcome to TanuiApp</h1>
+        <h1 class="display-3 fw-bold text-white">Welcome to ComRates</h1>
         <p class="lead text-light fs-4">Your Campus Marketplace - Buy, Sell, and Trade with Fellow Students</p>
         @if (SignInManager.IsSignedIn(User))
         {
@@ -17,7 +17,7 @@
                 <a asp-controller="Products" asp-action="Index" class="btn btn-light btn-lg me-3 shadow">
                     <i class="bi bi-shop me-2"></i>Browse Products
                 </a>
-                <a asp-controller="Seller" asp-action="AddProduct" class="btn btn-outline-light btn-lg shadow">
+                <a asp-controller="Products" asp-action="Create" class="btn btn-outline-light btn-lg shadow">
                     <i class="bi bi-plus-circle me-2"></i>Sell Your Items
                 </a>
             </div>
@@ -75,7 +75,7 @@
 <!-- How It Works Section -->
 <section class="py-5">
     <div class="container">
-        <h2 class="text-center fw-bold mb-5 text-success">How TanuiApp Works</h2>
+        <h2 class="text-center fw-bold mb-5 text-success">How ComRates Works</h2>
         <div class="row g-4">
             <div class="col-md-4 text-center">
                 <div class="position-relative mb-4">
@@ -171,7 +171,7 @@
 <!-- Features Section -->
 <section class="py-5">
     <div class="container">
-        <h2 class="text-center fw-bold mb-5 text-success">Why Choose TanuiApp?</h2>
+        <h2 class="text-center fw-bold mb-5 text-success">Why Choose ComRates?</h2>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card shadow-sm border-0 h-100">

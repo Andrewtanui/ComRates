@@ -1,24 +1,31 @@
-﻿@using Microsoft.AspNetCore.Identity;
-@inject SignInManager<Users> SignInManager;
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Users> SignInManager
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TanuiApp</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - ComRates</title>
+    <base href="~/" />
+
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TanuiApp.styles.css" asp-append-version="true" />
+
+    <!-- Page-specific styles -->
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
         <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-toggleable-lg fixed-top navbar-light bg-success shadow-sm">
             <div class="container-fluid">
                 <a class="navbar-brand text-white fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-shop me-2"></i>TanuiApp
+                    <i class="bi bi-shop me-2"></i>ComRates
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +38,7 @@
                                 <i class="bi bi-house me-1"></i>Home
                             </a>
                         </li>
-                        <!-- Show ecommerce navigation only when logged in -->
+
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item dropdown">
@@ -39,61 +46,33 @@
                                     <i class="bi bi-grid me-1"></i>Categories
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="electronics">
-                                            <i class="bi bi-laptop me-2"></i>Electronics
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="books">
-                                            <i class="bi bi-book me-2"></i>Books & Textbooks
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="clothing">
-                                            <i class="bi bi-bag me-2"></i>Clothing & Accessories
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="sports">
-                                            <i class="bi bi-trophy me-2"></i>Sports & Recreation
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Products" asp-action="Index">
-                                            <i class="bi bi-list me-2"></i>All Products
-                                        </a>
-                                    </li>
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="electronics"><i class="bi bi-laptop me-2"></i>Electronics</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="books"><i class="bi bi-book me-2"></i>Books & Textbooks</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="clothing"><i class="bi bi-bag me-2"></i>Clothing & Accessories</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="sports"><i class="bi bi-trophy me-2"></i>Sports & Recreation</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Index"><i class="bi bi-list me-2"></i>All Products</a></li>
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="Products" asp-action="Index">
-                                    <i class="bi bi-box me-1"></i>Products
-                                </a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="Seller" asp-action="Dashboard">
-                                    <i class="bi bi-shop me-1"></i>Sell
-                                </a>
+                                <a class="nav-link text-white" asp-controller="Products" asp-action="Create"><i class="bi bi-shop me-1"></i>Sell</a>
                             </li>
                         }
+
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="About">
-                                <i class="bi bi-info-circle me-1"></i>About
-                            </a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle me-1"></i>About</a>
                         </li>
                     </ul>
 
-                    <!-- Search bar for logged in users -->
                     @if (SignInManager.IsSignedIn(User))
                     {
                         <form class="d-flex me-3" asp-controller="Products" asp-action="Search" method="get">
                             <div class="input-group">
                                 <input class="form-control" type="search" name="query" placeholder="Search products..." aria-label="Search">
-                                <button class="btn btn-light" type="submit">
-                                    <i class="bi bi-search"></i>
-                                </button>
+                                <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
                             </div>
                         </form>
                     }
@@ -103,14 +82,16 @@
             </div>
         </nav>
     </header>
-    <div>
+
+    <main role="main" class="pb-3">
         @RenderBody()
-    </div>
+    </main>
+
     <footer class="footer bg-success text-white mt-auto py-3 shadow-sm">
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5 class="fw-bold">TanuiApp</h5>
+                    <h5 class="fw-bold">ComRates</h5>
                     <p class="small">Your trusted campus marketplace for buying and selling.</p>
                 </div>
                 <div class="col-md-4">
@@ -130,14 +111,17 @@
                     </ul>
                 </div>
             </div>
-            <hr class="my-3">
+            <hr class="my-3" />
             <div class="text-center">
-                <small>&copy; 2025 - <strong>TanuiApp</strong> | Campus Marketplace</small>
+                <small>&copy; 2025 - <strong>ComRates</strong> | Campus Marketplace</small>
             </div>
         </div>
     </footer>
+
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         window.addEventListener("scroll", function () {
             const navbar = document.getElementById("mainNavbar");
@@ -148,7 +132,7 @@
             }
         });
     </script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

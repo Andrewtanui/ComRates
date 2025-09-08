@@ -1,0 +1,70 @@
+﻿@model IEnumerable<TanuiApp.Models.Product>
+
+@{
+    ViewData["Title"] = "Category: " + ViewBag.CategoryName;
+}
+
+<div class="container my-5">
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">📂 @ViewBag.CategoryName</h2>
+        <p class="text-muted">Explore all products in this category</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            No products found in this category.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-5">
+            @foreach (var product in Model)
+            {
+                <div class="col-md-3">
+                    <div class="card h-100 shadow-sm">
+                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                        <div class="card-body">
+                            <h5 class="card-title">@product.Name</h5>
+
+                            @if (product.OnSale)
+                            {
+                                <p class="text-danger fw-bold">
+                                    $@product.Price
+                                    <span class="text-muted text-decoration-line-through">
+                                        $@Math.Round(product.Price * 1.5M, 2)
+                                    </span>
+                                </p>
+                                @if (product.SaleEndDate.HasValue)
+                                {
+                                    <div class="mt-2 text-success sale-timer" data-end="@product.SaleEndDate.Value.ToString("yyyy-MM-ddTHH:mm:ss")"></div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="fw-bold">$@product.Price</p>
+                            }
+
+                            <div class="mb-2">
+                                @for (int i = 0; i < (int)Math.Round(product.Rating); i++)
+                                {
+                                    <span>⭐</span>
+                                }
+                                @for (int i = (int)Math.Round(product.Rating); i < 5; i++)
+                                {
+                                    <span>☆</span>
+                                }
+                            </div>
+                            <button class="btn btn-success w-100">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/sale-timer.js"></script>
+}
