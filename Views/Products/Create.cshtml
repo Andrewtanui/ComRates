@@ -1,58 +1,108 @@
 ﻿@model TanuiApp.Models.Product
 
 @{
-    ViewData["Title"] = "Add Product";
+    ViewData["Title"] = "Create Product";
 }
 
 <div class="container my-5">
-    <h2 class="fw-bold mb-4">Add New Product</h2>
+    <h2 class="fw-bold mb-4">Create Product</h2>
 
-    <form asp-action="Create" method="post">
-        <div class="mb-3">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+    <form asp-action="Create" enctype="multipart/form-data" method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label"></label>
+                    <input asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Category" class="form-label"></label>
+                    <select asp-for="Category" class="form-control">
+                        <option value="">-- Select Category --</option>
+                        <option>Phones</option>
+                        <option>TV's</option>
+                        <option>Laptops</option>
+                        <option>Chargers</option>
+                        <option>Speakers</option>
+                        <option>Furniture</option>
+                        <option>Beauty & Personal Care</option>
+                        <option>Food</option>
+                        <option>Books</option>
+                        <option>Services</option>
+                    </select>
+                    <span asp-validation-for="Category" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Upload Image</label>
+                    <div id="drop-area" class="border rounded p-4 text-center bg-light">
+                        <p class="mb-2">Drag & drop an image here, or click to select</p>
+                        <input type="file" name="ImageFile" id="ImageFile" class="form-control d-none" accept="image/*" />
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="document.getElementById('ImageFile').click()">Choose Image</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Save</button>
+            </div>
+
+            <!-- ✅ Live Image Preview -->
+            <div class="col-md-6 d-flex justify-content-center align-items-center">
+                <img id="preview" src="/images/products/default.png" class="img-fluid rounded shadow-sm" style="max-height: 300px;" />
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Price" class="form-label"></label>
-            <input asp-for="Price" class="form-control" step="0.01" />
-            <span asp-validation-for="Price" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="ImageUrl" class="form-label"></label>
-            <input asp-for="ImageUrl" class="form-control" />
-            <span asp-validation-for="ImageUrl" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Category" class="form-label"></label>
-            <input asp-for="Category" class="form-control" />
-            <span asp-validation-for="Category" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3 form-check">
-            <input asp-for="OnSale" class="form-check-input" />
-            <label asp-for="OnSale" class="form-check-label"></label>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="SaleEndDate" class="form-label"></label>
-            <input asp-for="SaleEndDate" type="datetime-local" class="form-control" />
-            <span asp-validation-for="SaleEndDate" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Add Product</button>
     </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const fileInput = document.getElementById('ImageFile');
+        const preview = document.getElementById('preview');
+        const dropArea = document.getElementById('drop-area');
+
+        // Handle file input change
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Drag and drop
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('bg-primary', 'text-white');
+        });
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('bg-primary', 'text-white');
+        });
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('bg-primary', 'text-white');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    preview.src = ev.target.result;
+                }
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+            }
+        });
+    </script>
 }

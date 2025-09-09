@@ -1,11 +1,30 @@
 ﻿@model IEnumerable<TanuiApp.Models.Product>
 @using System.Security.Claims
+@using System.Text.RegularExpressions
 
 @{
     ViewData["Title"] = "Products";
+
+    string HighlightText(string text, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return text;
+
+        var regex = new Regex("(" + Regex.Escape(search) + ")", RegexOptions.IgnoreCase);
+        return regex.Replace(text, "<mark>$1</mark>");
+    }
+
+    var searchQuery = ViewBag.SearchQuery as string;
 }
 
 <div class="container my-5">
+
+    <!-- 🔍 Search Bar -->
+    <form class="d-flex mb-5" asp-controller="Products" asp-action="Search" method="get">
+        <div class="input-group">
+            <input class="form-control" type="search" name="query" placeholder="Search products..." aria-label="Search" value="@searchQuery">
+            <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+    </form>
 
     <!-- 🔥 On Sale Section -->
     <div class="text-center mb-5">
@@ -20,7 +39,9 @@
                 <div class="card h-100 shadow-sm">
                     <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
                     <div class="card-body">
-                        <h5 class="card-title">@product.Name</h5>
+                        <h5 class="card-title">
+                            @Html.Raw(HighlightText(product.Name, searchQuery))
+                        </h5>
                         <p class="text-danger fw-bold">
                             $@product.Price
                             <span class="text-muted text-decoration-line-through">
@@ -43,7 +64,6 @@
                             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                             if (product.UserId != userId)
                             {
-                                <!-- ✅ Updated: Cart and Wishlist buttons -->
                                 <div class="d-grid gap-2">
                                     <form asp-action="AddToCart" method="post">
                                         <input type="hidden" name="productId" value="@product.Id" />
@@ -51,7 +71,6 @@
                                             <i class="fas fa-shopping-cart"></i> Add to Cart
                                         </button>
                                     </form>
-
                                     <form asp-controller="Wishlist" asp-action="AddToWishlist" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@product.Id" />
@@ -101,7 +120,9 @@
                 <div class="card h-100 shadow-sm">
                     <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
                     <div class="card-body">
-                        <h5 class="card-title">@product.Name</h5>
+                        <h5 class="card-title">
+                            @Html.Raw(HighlightText(product.Name, searchQuery))
+                        </h5>
                         <p class="fw-bold">$@product.Price</p>
                         <div class="mb-2">
                             @for (int i = 0; i < (int)Math.Round(product.Rating); i++)
@@ -119,7 +140,6 @@
                             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                             if (product.UserId != userId)
                             {
-                                <!-- ✅ Updated: Cart and Wishlist buttons -->
                                 <div class="d-grid gap-2">
                                     <form asp-action="AddToCart" method="post">
                                         <input type="hidden" name="productId" value="@product.Id" />
@@ -127,7 +147,6 @@
                                             <i class="fas fa-shopping-cart"></i> Add to Cart
                                         </button>
                                     </form>
-
                                     <form asp-controller="Wishlist" asp-action="AddToWishlist" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@product.Id" />
@@ -171,7 +190,7 @@
             <div class="col-md-3">
                 <a asp-controller="Products" asp-action="Category" asp-route-name="@category" class="text-decoration-none">
                     <div class="card shadow-sm h-100 text-center p-4 category-card">
-                        <h5>@category</h5>
+                        <h5>@Html.Raw(HighlightText(category, searchQuery))</h5>
                     </div>
                 </a>
             </div>

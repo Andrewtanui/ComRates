@@ -5,7 +5,6 @@ using TanuiApp.Data;
 using TanuiApp.Models;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Security.Claims;
 
 namespace TanuiApp.Controllers
 {
@@ -39,25 +38,88 @@ namespace TanuiApp.Controllers
             return View(products);
         }
 
+        // 🔍 SEARCH FEATURE
+        [AllowAnonymous]
+        public IActionResult Search(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return View("Index", _context.Products.ToList());
+            }
+
+            query = query.ToLower();
+
+            var results = _context.Products
+                .Where(p =>
+                    p.Name.ToLower().Contains(query) ||
+                    p.Description.ToLower().Contains(query) ||
+                    p.Category.ToLower().Contains(query))
+                .ToList();
+
+            ViewBag.SearchQuery = query;
+
+            return View("Index", results);
+        }
+
         public IActionResult Create() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model)
+        public async Task<IActionResult> Create(Product model, IFormFile ImageFile)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
+                // ✅ Return errors to the view instead of crashing
+                return View(model);
+            }
+
+            try
             {
                 var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "User not found. Please log in again.");
+                    return View(model);
+                }
+
                 model.UserId = user.Id;
                 model.Rating = 0;
                 model.OnSale = false;
 
+                // ✅ Handle Image Upload
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
+                    if (!Directory.Exists(uploadDir))
+                        Directory.CreateDirectory(uploadDir);
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                    var filePath = Path.Combine(uploadDir, uniqueFileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(stream);
+                    }
+
+                    model.ImageUrl = "/images/products/" + uniqueFileName;
+                }
+                else
+                {
+                    model.ImageUrl = "/images/products/default.png";
+                }
+
                 _context.Products.Add(model);
                 await _context.SaveChangesAsync();
 
+                TempData["Success"] = "Product created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            return View(model);
+            catch (Exception ex)
+            {
+                // ✅ Capture the real error instead of silent crash
+                ModelState.AddModelError("", $"An error occurred: {ex.Message}");
+                return View(model);
+            }
         }
 
         // ---------------- Add to Cart ----------------

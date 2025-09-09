@@ -41,19 +41,8 @@
 
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-grid me-1"></i>Categories
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="electronics"><i class="bi bi-laptop me-2"></i>Electronics</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="books"><i class="bi bi-book me-2"></i>Books & Textbooks</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="clothing"><i class="bi bi-bag me-2"></i>Clothing & Accessories</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Category" asp-route-category="sports"><i class="bi bi-trophy me-2"></i>Sports & Recreation</a></li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li><a class="dropdown-item" asp-controller="Products" asp-action="Index"><i class="bi bi-list me-2"></i>All Products</a></li>
-                                </ul>
-                            </li>
+                            @await Component.InvokeAsync("CategoryMenu")
+
                             <li class="nav-item">
                                 <a class="nav-link text-white" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
                             </li>
