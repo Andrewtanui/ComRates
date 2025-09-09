@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Delete Account";
+}
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-cog"></i> Account Settings</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("Settings")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user"></i> Profile Information
+                    </a>
+                    <a href="@Url.Action("ChangePassword")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-lock"></i> Change Password
+                    </a>
+                    <a href="@Url.Action("Statistics")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar"></i> Account Statistics
+                    </a>
+                    <a href="@Url.Action("DeleteAccount")" class="list-group-item list-group-item-action text-danger active">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Delete Account</h4>
+                </div>
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Error:</h6>
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+
+                    <div class="alert alert-warning" role="alert">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Warning!</h5>
+                        <p class="mb-0">This action cannot be undone. Deleting your account will permanently remove:</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-danger">
+                                        <i class="fas fa-times-circle"></i> What will be deleted:
+                                    </h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-user text-danger"></i> Your profile information</li>
+                                        <li><i class="fas fa-box text-danger"></i> All your listed products</li>
+                                        <li><i class="fas fa-shopping-cart text-danger"></i> Your cart items</li>
+                                        <li><i class="fas fa-heart text-danger"></i> Your wishlist items</li>
+                                        <li><i class="fas fa-envelope text-danger"></i> All account communications</li>
+                                        <li><i class="fas fa-key text-danger"></i> Login credentials</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-info">
+                                        <i class="fas fa-lightbulb"></i> Consider instead:
+                                    </h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-pause text-info"></i> Taking a break from the platform</li>
+                                        <li><i class="fas fa-cog text-info"></i> Updating your notification settings</li>
+                                        <li><i class="fas fa-eye-slash text-info"></i> Making your profile private</li>
+                                        <li><i class="fas fa-trash-alt text-info"></i> Clearing your cart/wishlist only</li>
+                                        <li><i class="fas fa-envelope text-info"></i> Contacting support for help</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Final confirmation required:</strong>
+                        <p class="mb-0">
+                            By clicking "Delete My Account", you confirm that you understand this action is permanent and irreversible.
+                            All your data will be permanently deleted from our servers within 24 hours.
+                        </p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="@Url.Action("Settings")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Go Back
+                            </a>
+                            <a href="/Identity/Account/Manage" class="btn btn-outline-info">
+                                <i class="fas fa-cog"></i> Account Settings Instead
+                            </a>
+                        </div>
+                        <form asp-action="DeleteAccountConfirmed" method="post" onsubmit="return confirmDelete()">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete My Account
+                            </button>
+                        </form>
+                    </div>
+
+                    <hr class="my-4">
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Need help? <a href="mailto:support@tanuiapp.com">Contact our support team</a> before making this decision.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete() {
+            return confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.\n\nType "DELETE" to confirm:')
+                && prompt('Please type "DELETE" to confirm:') === 'DELETE';
+        }
+    </script>
+}

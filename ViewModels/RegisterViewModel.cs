@@ -12,7 +12,7 @@ namespace TanuiApp.ViewModels
         [EmailAddress]
         public string Email { get; set; }
 
-        
+
         [Required(ErrorMessage = "Password is Required")]
         [StringLength(40, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]

@@ -1,0 +1,220 @@
+﻿@model TanuiApp.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile Settings";
+}
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-cog"></i> Account Settings</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("Settings")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user"></i> Profile Information
+                    </a>
+                    <a href="@Url.Action("UpdatePassword")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-lock"></i> Update Password
+                    </a>
+                    <a href="@Url.Action("Statistics")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar"></i> Account Statistics
+                    </a>
+                    <a href="@Url.Action("DeleteAccount")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user"></i> Profile Settings</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h6>
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Settings" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Profile Picture Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Profile Picture</h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                                        {
+                                            <img src="@Model.ProfilePictureUrl" alt="Profile" class="rounded-circle" width="80" height="80" style="object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                <i class="fas fa-user fa-2x text-white"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label asp-for="ProfilePictureUrl" class="form-label"></label>
+                                        <input asp-for="ProfilePictureUrl" class="form-control" placeholder="Enter image URL" />
+                                        <span asp-validation-for="ProfilePictureUrl" class="text-danger"></span>
+                                        <div class="form-text">Enter a valid image URL for your profile picture</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Personal Information</h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="FullName" class="form-label"></label>
+                                    <input asp-for="FullName" class="form-control" />
+                                    <span asp-validation-for="FullName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DateOfBirth" class="form-label"></label>
+                                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="Bio" class="form-label"></label>
+                                    <textarea asp-for="Bio" class="form-control" rows="3" placeholder="Tell us about yourself..."></textarea>
+                                    <span asp-validation-for="Bio" class="text-danger"></span>
+                                    <div class="form-text">Maximum 500 characters</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Address Information</h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="Address" class="form-label"></label>
+                                    <input asp-for="Address" class="form-control" />
+                                    <span asp-validation-for="Address" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="City" class="form-label"></label>
+                                    <input asp-for="City" class="form-control" />
+                                    <span asp-validation-for="City" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="State" class="form-label"></label>
+                                    <input asp-for="State" class="form-control" />
+                                    <span asp-validation-for="State" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="PostalCode" class="form-label"></label>
+                                    <input asp-for="PostalCode" class="form-control" />
+                                    <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Country" class="form-label"></label>
+                                    <input asp-for="Country" class="form-control" />
+                                    <span asp-validation-for="Country" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Account Preferences</h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input asp-for="EmailNotifications" class="form-check-input" type="checkbox" />
+                                    <label asp-for="EmailNotifications" class="form-check-label">
+                                        Receive Email Notifications
+                                    </label>
+                                    <div class="form-text">Get notified about orders, promotions, and updates</div>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input asp-for="SmsNotifications" class="form-check-input" type="checkbox" />
+                                    <label asp-for="SmsNotifications" class="form-check-label">
+                                        Receive SMS Notifications
+                                    </label>
+                                    <div class="form-text">Get text messages for important updates</div>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input asp-for="IsPublicProfile" class="form-check-input" type="checkbox" />
+                                    <label asp-for="IsPublicProfile" class="form-check-label">
+                                        Make Profile Public
+                                    </label>
+                                    <div class="form-text">Allow other users to view your profile</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="@Url.Action("Index", "Products")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
