@@ -6,7 +6,7 @@
     {
         <!-- Cart -->
         <li class="nav-item me-2">
-            <a class="nav-link text-white position-relative" asp-controller="Cart" asp-action="Index" title="Shopping Cart">
+            <a class="nav-link text-white position-relative" asp-controller="Cart" asp-action="MyCart" title="Shopping Cart">
                 <i class="bi bi-cart3 fs-5"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small" id="cart-count">
                     3
@@ -16,7 +16,7 @@
 
         <!-- Wishlist -->
         <li class="nav-item me-2">
-            <a class="nav-link text-white position-relative" asp-controller="Wishlist" asp-action="Index" title="Wishlist">
+            <a class="nav-link text-white position-relative" asp-controller="Wishlist" asp-action="MyWishlist" title="Wishlist">
                 <i class="bi bi-heart fs-5"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning small" id="wishlist-count">
                     2
@@ -51,13 +51,13 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" asp-controller="Orders" asp-action="MyOrders">
-                        <i class="bi bi-bag-check me-2"></i>My Orders
+                    <a class="dropdown-item" asp-controller="Cart" asp-action="MyCart">
+                        <i class="bi bi-bag-check me-2"></i>My Cart
                         <span class="badge bg-primary ms-1">2</span>
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" asp-controller="Wishlist" asp-action="Index">
+                    <a class="dropdown-item" asp-controller="Wishlist" asp-action="MyWishlist">
                         <i class="bi bi-heart me-2"></i>My Wishlist
                         <span class="badge bg-warning text-dark ms-1">2</span>
                     </a>
