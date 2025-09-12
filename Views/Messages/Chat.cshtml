@@ -1,0 +1,111 @@
+@model TanuiApp.ViewModels.ChatViewModel
+
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<div class="container-fluid my-3">
+    <div class="row" style="height: calc(100vh - 120px);">
+        <div class="col-12 col-md-4 border-end d-flex flex-column p-0">
+            <div class="p-3 border-bottom fw-bold">Chats</div>
+            <div id="threadList" class="flex-grow-1 overflow-auto">
+                @foreach (var t in Model.Threads)
+                {
+                    var isActive = t.ThreadKey == Model.SelectedThreadKey;
+                    <a class="d-flex align-items-center p-3 text-decoration-none @(isActive ? "bg-light" : "")"
+                       asp-controller="Messages" asp-action="Chat" asp-route-withUserId="@t.WithUserId" asp-route-productId="@t.ProductId">
+                        <img src="@(t.WithUserAvatar ?? "/images/products/default.svg")" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;" />
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold">@t.WithUserName</span>
+                                <small class="text-muted">@t.LastAt.ToShortTimeString()</small>
+                            </div>
+                            <div class="text-truncate small text-muted">@t.LastMessage</div>
+                        </div>
+                        @if (t.Unread > 0)
+                        {
+                            <span class="badge bg-success ms-2">@t.Unread</span>
+                        }
+                    </a>
+                }
+            </div>
+        </div>
+        <div class="col-12 col-md-8 d-flex flex-column p-0" data-threadkey="@Model.SelectedThreadKey">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="fw-bold">Conversation</div>
+                @if (!string.IsNullOrEmpty(Model.SelectedThreadKey) && (bool)(ViewBag.CanDeleteThread ?? false))
+                {
+                    <form asp-controller="Messages" asp-action="DeleteThread" method="post" onsubmit="return confirm('Delete this conversation for both participants?');">
+                        <input type="hidden" name="threadKey" value="@Model.SelectedThreadKey" />
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete thread</button>
+                    </form>
+                }
+            </div>
+            <div id="messageList" class="flex-grow-1 overflow-auto p-3">
+                @foreach (var m in Model.Messages)
+                {
+                    var myId = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+                    var isMine = m.SenderId == myId;
+                    <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
+                        <div class="p-2 rounded @(isMine ? "bg-success text-white" : "bg-light border")" style="max-width:70%">
+                            <div>@m.Content</div>
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                <small class="text-muted">@m.CreatedAt.ToShortTimeString()</small>
+                                @if (isMine)
+                                {
+                                    // Sent if just created (approx), Received if delivered, Read if recipient read
+                                    var status = m.IsRead ? "✓✓" : "✓";
+                                    <small class="@(m.IsRead ? "text-primary" : "text-muted")">@status</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <form id="sendForm" asp-controller="Messages" asp-action="Send" method="post" class="d-flex gap-2 p-3 border-top">
+                <input type="hidden" name="recipientId" value="@Model.WithUserId" />
+                <input type="hidden" name="productId" value="@Model.ProductId" />
+                <input id="contentInput" type="text" name="content" class="form-control" placeholder="Type a message..." required />
+                <button type="submit" class="btn btn-success"><i class="bi bi-send"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const container = document.querySelector('[data-threadkey]');
+        const threadKey = container?.getAttribute('data-threadkey');
+        const list = document.getElementById('messageList');
+        const form = document.getElementById('sendForm');
+        const contentInput = document.getElementById('contentInput');
+
+        if (threadKey) {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/messages')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('ReceiveMessage', (msg) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'd-flex mb-2 justify-content-start';
+                const bubble = document.createElement('div');
+                bubble.className = 'p-2 rounded bg-light border';
+                bubble.style.maxWidth = '70%';
+                bubble.innerHTML = `<div>${escapeHtml(msg.content)}</div><small class="text-muted">just now</small>`
+                wrapper.appendChild(bubble);
+                list.appendChild(wrapper);
+                list.scrollTop = list.scrollHeight;
+            });
+
+            connection.start().then(() => connection.invoke('JoinThread', threadKey)).catch(console.error);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+        }
+    </script>
+}
+
+

@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using TanuiApp.Data;
 
 namespace TanuiApp.ViewComponents
@@ -13,15 +16,23 @@ namespace TanuiApp.ViewComponents
             _context = context;
         }
 
-        public IViewComponentResult Invoke()
+        public async Task<IViewComponentResult> InvokeAsync()
         {
-            var categories = _context.Products
-                .Select(p => p.Category)
-                .Distinct()
-                .OrderBy(c => c)
-                .ToList();
+            try
+            {
+                var categories = await _context.Products
+                    .Select(p => p.Category)
+                    .Where(c => c != null && c != "")
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToListAsync();
 
-            return View(categories);
+                return View(categories);
+            }
+            catch
+            {
+                return View(new List<string>());
+            }
         }
     }
 }

@@ -231,5 +231,62 @@ namespace TanuiApp.Controllers
             ViewBag.Stats = stats;
             return View();
         }
+
+        // My Listings (dashboard view of current user's products)
+        public async Task<IActionResult> MyListings()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var myProducts = await _context.Products
+                .Where(p => p.UserId == user.Id)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Total = myProducts.Count;
+            return View(myProducts);
+        }
+
+        // Public catalog of users (only public profiles)
+        [AllowAnonymous]
+        public async Task<IActionResult> PublicCatalog()
+        {
+            var users = await _context.Users
+                .Where(u => u.IsPublicProfile)
+                .Select(u => new {
+                    u.Id,
+                    u.FullName,
+                    u.ProfilePictureUrl,
+                    Products = _context.Products.Count(p => p.UserId == u.Id)
+                })
+                .OrderByDescending(u => u.Products)
+                .ToListAsync();
+
+            return View(users);
+        }
+
+        // Public profile view showing a user's catalog of products
+        [AllowAnonymous]
+        public async Task<IActionResult> ViewProfile(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("PublicCatalog");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null || !user.IsPublicProfile)
+            {
+                return NotFound();
+            }
+
+            var products = await _context.Products
+                .Where(p => p.UserId == id)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.User = user;
+            return View(products);
+        }
     }
 }

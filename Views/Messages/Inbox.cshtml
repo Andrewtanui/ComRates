@@ -1,0 +1,35 @@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Inbox";
+}
+
+<div class="container my-5">
+    <h2 class="fw-bold mb-4">Inbox</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No conversations yet.</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var t in Model)
+            {
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   asp-controller="Messages" asp-action="Chat" asp-route-withUserId="@(t.LastMessage.SenderId == User.FindFirst("sub")?.Value ? t.LastMessage.RecipientId : t.LastMessage.SenderId)" asp-route-productId="@t.LastMessage.ProductId">
+                    <div>
+                        <div class="fw-bold">@t.LastMessage.Content</div>
+                        <small class="text-muted">@t.LastAt</small>
+                    </div>
+                    @if (t.Unread > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill">@t.Unread</span>
+                    }
+                </a>
+            }
+        </div>
+    }
+</div>
+
+

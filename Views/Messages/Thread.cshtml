@@ -1,0 +1,70 @@
+@model IEnumerable<TanuiApp.Models.Message>
+
+@{
+    ViewData["Title"] = "Conversation";
+}
+
+<div class="container my-5" data-threadkey="@TanuiApp.Controllers.MessagesController.BuildThreadKey(User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!, (string)ViewBag.WithUserId, (int?)ViewBag.ProductId)">
+    <h2 class="fw-bold mb-4">Conversation</h2>
+
+    <div class="card mb-3">
+        <div id="messageList" class="card-body" style="max-height: 50vh; overflow-y: auto;">
+            @foreach (var m in Model)
+            {
+                var isMine = m.SenderId == User.FindFirst("sub")?.Value || m.SenderId == User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+                <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
+                    <div class="p-2 rounded @(isMine ? "bg-success text-white" : "bg-light border")" style="max-width:70%">
+                        <div>@m.Content</div>
+                        <small class="text-muted">@m.CreatedAt</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <form id="sendForm" asp-controller="Messages" asp-action="Send" method="post" class="d-flex gap-2">
+        <input type="hidden" name="recipientId" value="@ViewBag.WithUserId" />
+        <input type="hidden" name="productId" value="@ViewBag.ProductId" />
+        <input id="contentInput" type="text" name="content" class="form-control" placeholder="Type a message..." required />
+        <button type="submit" class="btn btn-success">Send</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const container = document.querySelector('[data-threadkey]');
+        const threadKey = container.getAttribute('data-threadkey');
+        const list = document.getElementById('messageList');
+        const form = document.getElementById('sendForm');
+        const contentInput = document.getElementById('contentInput');
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/messages')
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on('ReceiveMessage', (msg) => {
+            // append bubble
+            const wrapper = document.createElement('div');
+            wrapper.className = 'd-flex mb-2 justify-content-start';
+            const bubble = document.createElement('div');
+            bubble.className = 'p-2 rounded bg-light border';
+            bubble.style.maxWidth = '70%';
+            bubble.innerHTML = `<div>${escapeHtml(msg.content)}</div><small class="text-muted">just now</small>`
+            wrapper.appendChild(bubble);
+            list.appendChild(wrapper);
+            list.scrollTop = list.scrollHeight;
+        });
+
+        connection.start().then(() => {
+            connection.invoke('JoinThread', threadKey);
+        }).catch(console.error);
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"] /g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',' ':"&nbsp;"}[c]));
+        }
+    </script>
+}
+
+

@@ -1,0 +1,98 @@
+﻿<!-- Create Views/Test/Index.cshtml -->
+@{
+    ViewData["Title"] = "Debug Tests";
+}
+
+<div class="container mt-4">
+    <h2>TanuiApp Debug Tests</h2>
+
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert @(ViewBag.Message.Contains("Success") || ViewBag.Message.Contains("OK") || ViewBag.Message.Contains("passed") ? "alert-success" : "alert-danger")">
+            <strong>Result:</strong> @ViewBag.Message
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>1. Database Tests</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("TestDb", "Test")" class="btn btn-primary">Test Database Connection</a>
+                    <p class="mt-2 text-muted">Tests if EF can connect to SQL Server and count products.</p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>2. Authentication Test</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("TestAuth", "Test")" class="btn btn-warning">Test User Authentication</a>
+                    <p class="mt-2 text-muted">Tests if current user can be retrieved.</p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>3. File System Test</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("TestFileSystem", "Test")" class="btn btn-info">Test File System</a>
+                    <p class="mt-2 text-muted">Tests directory creation and file write permissions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>4. Simple Product Creation (No File Upload)</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateSimple" asp-controller="Test" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Product Name</label>
+                            <input type="text" name="name" class="form-control" value="Test Product" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Price</label>
+                            <input type="number" name="price" class="form-control" step="0.01" min="0.01" value="10.00" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-control" required>
+                                <option value="">Select Category</option>
+                                <option value="Test" selected>Test</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Books">Books</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Create Test Product</button>
+                        @Html.AntiForgeryToken()
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Navigation</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to Home</a>
+                    <a href="@Url.Action("Index", "Products")" class="btn btn-secondary">View Products</a>
+                    <a href="@Url.Action("Create", "Products")" class="btn btn-secondary">Original Create Form</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

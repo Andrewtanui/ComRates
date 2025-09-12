@@ -1,0 +1,49 @@
+@model IEnumerable<TanuiApp.Models.Product>
+
+@{
+    var user = ViewBag.User as TanuiApp.Models.Users;
+    ViewData["Title"] = user != null ? user.FullName : "Profile";
+}
+
+<div class="container my-5">
+    <div class="d-flex align-items-center mb-4">
+        <img src="@(user?.ProfilePictureUrl ?? "/images/products/default.svg")" class="rounded-circle me-3" style="width:72px;height:72px;object-fit:cover;" alt="@user?.FullName" />
+        <div>
+            <h2 class="fw-bold mb-0">@user?.FullName</h2>
+            <small class="text-muted">@Model.Count() products</small>
+        </div>
+        @if (User.Identity.IsAuthenticated && user != null && user.Id != User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value)
+        {
+            <a class="btn btn-outline-success ms-auto" asp-controller="Messages" asp-action="Chat" asp-route-withUserId="@user.Id">
+                <i class="bi bi-chat-dots"></i> Message @user.FullName
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No products yet.</div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var product in Model)
+            {
+                <div class="col-md-3">
+                    <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
+                        <div class="card h-100 shadow-sm">
+                            <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                            <div class="card-body">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="fw-bold mb-1">$@product.Price</p>
+                                <small class="text-muted">@product.Category • @product.CreatedAt.ToShortDateString()</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+

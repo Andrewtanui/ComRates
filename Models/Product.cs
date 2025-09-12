@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Models/Product.cs
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TanuiApp.Models
@@ -7,31 +10,50 @@ namespace TanuiApp.Models
     {
         public int Id { get; set; }
 
-        [Required, StringLength(100)]
-        public string Name { get; set; }
+        [Required(ErrorMessage = "Product name is required.")]
+        [StringLength(100, ErrorMessage = "Product name cannot exceed 100 characters.")]
+        [Display(Name = "Product Name")]
+        public string Name { get; set; } = string.Empty;
 
-        [Required, StringLength(500)]
-        public string Description { get; set; }
+        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+        [Display(Name = "Description")]
+        public string? Description { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Price is required.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
         [Column(TypeName = "decimal(18,2)")]
-        [Range(1, 1000000, ErrorMessage = "Price must be greater than 0")]
+        [Display(Name = "Price")]
         public decimal Price { get; set; }
 
+        [Display(Name = "Image")]
         public string? ImageUrl { get; set; }
 
-        public double Rating { get; set; }
-        public bool OnSale { get; set; }
+        [Required(ErrorMessage = "Category is required.")]
+        [StringLength(50, ErrorMessage = "Category cannot exceed 50 characters.")]
+        [Display(Name = "Category")]
+        public string Category { get; set; } = string.Empty;
+
+        [Display(Name = "On Sale")]
+        public bool OnSale { get; set; } = false;
+
+        [Display(Name = "Sale End Date")]
         public DateTime? SaleEndDate { get; set; }
 
-        [Required(ErrorMessage = "Please select a category")]
-        public string Category { get; set; }
+        [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
+        public double Rating { get; set; } = 0;
 
-        // 🔗 Link to the User who created it
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
+        [Display(Name = "Created Date")]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        // 🔗 Navigation Properties
+        public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // Navigation property to User (optional, but good practice)
         [ForeignKey("UserId")]
-        public Users User { get; set; }
+        public virtual Users? User { get; set; }
     }
 }

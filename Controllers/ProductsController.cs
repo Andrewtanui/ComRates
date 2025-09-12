@@ -1,159 +1,234 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TanuiApp.Data;
 using TanuiApp.Models;
+using TanuiApp.ViewModels;
+using TanuiApp.Services;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace TanuiApp.Controllers
 {
-    [Authorize]
     public class ProductsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<ProductsController> _logger;
         private readonly UserManager<Users> _userManager;
+        private readonly IImageStorageService _imageStorageService;
 
-        public ProductsController(AppDbContext context, UserManager<Users> userManager)
+        public ProductsController(AppDbContext context, ILogger<ProductsController> logger, UserManager<Users> userManager, IImageStorageService imageStorageService)
         {
             _context = context;
+            _logger = logger;
             _userManager = userManager;
+            _imageStorageService = imageStorageService;
         }
 
         [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string searchQuery)
         {
-            var products = _context.Products.ToList();
-            return View(products);
+            var products = from p in _context.Products.Include(p => p.User)
+                           select p;
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                products = products.Where(p =>
+                    p.Name.Contains(searchQuery) ||
+                    p.Description.Contains(searchQuery) ||
+                    p.Category.Contains(searchQuery));
+            }
+
+            return View(await products.AsNoTracking().ToListAsync());
         }
 
         [AllowAnonymous]
-        public IActionResult Category(string name)
+        [HttpGet]
+        public async Task<IActionResult> Search(string query)
         {
             var products = _context.Products
-                .Where(p => p.Category == name)
-                .ToList();
+                .Include(p => p.User)
+                .AsQueryable();
 
-            ViewBag.CategoryName = name;
-            return View(products);
-        }
-
-        // 🔍 SEARCH FEATURE
-        [AllowAnonymous]
-        public IActionResult Search(string query)
-        {
-            if (string.IsNullOrWhiteSpace(query))
+            if (!string.IsNullOrWhiteSpace(query))
             {
-                return View("Index", _context.Products.ToList());
+                products = products.Where(p =>
+                    p.Name.Contains(query) ||
+                    p.Description!.Contains(query) ||
+                    p.Category.Contains(query));
             }
-
-            query = query.ToLower();
-
-            var results = _context.Products
-                .Where(p =>
-                    p.Name.ToLower().Contains(query) ||
-                    p.Description.ToLower().Contains(query) ||
-                    p.Category.ToLower().Contains(query))
-                .ToList();
 
             ViewBag.SearchQuery = query;
-
-            return View("Index", results);
+            var list = await products.AsNoTracking().ToListAsync();
+            return View("List", list);
         }
 
-        public IActionResult Create() => View();
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model, IFormFile ImageFile)
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> Category(string? category, string? name)
         {
-            if (!ModelState.IsValid)
+            // Support both asp-route-category and asp-route-name
+            var selected = (!string.IsNullOrWhiteSpace(category) ? category : name)?.Trim();
+            if (string.IsNullOrWhiteSpace(selected))
             {
-                // ✅ Return errors to the view instead of crashing
-                return View(model);
+                return RedirectToAction(nameof(Index));
             }
 
+            var selectedLower = selected.ToLower();
+
+            var products = await _context.Products
+                .Include(p => p.User)
+                .Where(p => p.Category.ToLower() == selectedLower)
+                .AsNoTracking()
+                .ToListAsync();
+
+            ViewBag.CategorySelected = selected;
+            return View("List", products);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> Details(int id)
+        {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
-                {
-                    ModelState.AddModelError("", "User not found. Please log in again.");
-                    return View(model);
-                }
+                var product = await _context.Products
+                    .Include(p => p.User)       // seller
+                    .Include(p => p.Comments)   // comments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == id);
 
-                model.UserId = user.Id;
-                model.Rating = 0;
-                model.OnSale = false;
+                if (product == null)
+                    return NotFound();
 
-                // ✅ Handle Image Upload
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
-                    if (!Directory.Exists(uploadDir))
-                        Directory.CreateDirectory(uploadDir);
+                var reviews = await _context.Reviews
+                    .AsNoTracking()
+                    .Where(r => r.ProductId == id)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
 
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
-                    var filePath = Path.Combine(uploadDir, uniqueFileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(stream);
-                    }
-
-                    model.ImageUrl = "/images/products/" + uniqueFileName;
-                }
-                else
-                {
-                    model.ImageUrl = "/images/products/default.png";
-                }
-
-                _context.Products.Add(model);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Product created successfully!";
-                return RedirectToAction(nameof(Index));
+                ViewBag.Reviews = reviews;
+                return View(product);
             }
-            catch (Exception ex)
+            catch
             {
-                // ✅ Capture the real error instead of silent crash
-                ModelState.AddModelError("", $"An error occurred: {ex.Message}");
-                return View(model);
+                return NotFound();
             }
         }
 
-        // ---------------- Add to Cart ----------------
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddToCart(int productId)
+        public async Task<IActionResult> AddReview(int productId, int rating, string content)
         {
-            var user = await _userManager.GetUserAsync(User);
-            var product = await _context.Products.FindAsync(productId);
-
-            if (product == null) return NotFound();
-
-            if (product.UserId == user.Id)
+            if (string.IsNullOrWhiteSpace(content) || rating < 1 || rating > 5)
             {
-                TempData["Error"] = "You cannot add your own product to the cart.";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "Invalid review submission.";
+                return RedirectToAction("Details", new { id = productId });
             }
 
-            var existingItem = _context.CartItems
-                .FirstOrDefault(c => c.ProductId == productId && c.UserId == user.Id);
+            var review = new Review
+            {
+                ProductId = productId,
+                Rating = rating,
+                Content = content,
+                UserId = User?.Identity?.Name,
+                CreatedAt = DateTime.Now
+            };
 
-            if (existingItem != null)
-                existingItem.Quantity++;
-            else
-                _context.CartItems.Add(new CartItem
-                {
-                    UserId = user.Id,
-                    ProductId = productId,
-                    Quantity = 1
-                });
-
+            _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Product added to cart!";
-            return RedirectToAction(nameof(Index));
+
+            await UpdateProductRating(productId);
+
+            return RedirectToAction("Details", new { id = productId });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteReview(int id)
+        {
+            var review = await _context.Reviews
+                .Include(r => r.Product)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (review == null)
+                return Json(new { success = false, message = "Review not found." });
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            // Author or Seller
+            bool isAuthor = review.UserId == currentUserId;
+            bool isSeller = review.Product.UserId == currentUserId;
+
+            if (!isAuthor && !isSeller)
+                return Json(new { success = false, message = "Unauthorized." });
+
+            _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
+
+            await UpdateProductRating(review.ProductId);
+
+            return Json(new { success = true, reviewId = review.Id });
+        }
+
+        [Authorize]
+        public IActionResult Create()
+        {
+            return View(new ProductCreateViewModel());
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductCreateViewModel vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var imageUrl = await _imageStorageService.SaveProductImageAsync(vm.ImageFile);
+
+                    var product = new Product
+                    {
+                        Name = vm.Name,
+                        Description = vm.Description,
+                        Price = vm.Price,
+                        Category = vm.Category,
+                        ImageUrl = imageUrl,
+                        UserId = _userManager.GetUserId(User),
+                        CreatedAt = DateTime.Now
+                    };
+
+                    _context.Products.Add(product);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Success"] = "Product created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating product");
+                    ModelState.AddModelError(string.Empty, "An error occurred while creating the product. Please try again.");
+                }
+            }
+
+            return View(vm);
+        }
+
+        private async Task UpdateProductRating(int productId)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null) return;
+
+            var ratings = await _context.Reviews
+                .Where(r => r.ProductId == productId)
+                .Select(r => (double?)r.Rating)
+                .ToListAsync();
+
+            var average = ratings.Any() && ratings.Average().HasValue ? ratings.Average()!.Value : 0.0;
+            product.Rating = Math.Round(average, 2);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
+
+

@@ -9,8 +9,13 @@ namespace TanuiApp.Data
         public AppDbContext(DbContextOptions options) : base(options) { }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
-        public DbSet<WishlistItem> WishlistItems { get; set; } // ✅ Added WishlistItems
+        public DbSet<WishlistItem> WishlistItems { get; set; } // ✅ WishlistItems
+        public DbSet<Message> Messages { get; set; }
+
+        // ❌ Removed this line:
+        // public object Comments { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -46,6 +51,10 @@ namespace TanuiApp.Data
             builder.Entity<WishlistItem>()
                 .HasIndex(w => new { w.UserId, w.ProductId })
                 .IsUnique();
+
+            // Messages indexing
+            builder.Entity<Message>()
+                .HasIndex(m => m.ThreadKey);
         }
     }
 }

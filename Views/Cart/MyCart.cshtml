@@ -1,32 +1,70 @@
 ﻿@model IEnumerable<TanuiApp.Models.CartItem>
 
-<h2>My Cart</h2>
+<h2 class="mb-4">🛒 My Cart</h2>
 
 @if (!Model.Any())
 {
-    <p>Your cart is empty.</p>
+    <div class="alert alert-info" role="alert">
+        Your cart is empty.
+    </div>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Product.Name</td>
-                    <td>@item.Product.Price.ToString("C")</td>
-                    <td>@item.Quantity</td>
-                    <td>@(item.Product.Price* item.Quantity)</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="d-flex align-items-center">
+                                    <img src="@item.Product.ImageUrl" alt="@item.Product.Name" width="60" class="me-3 rounded">
+                                    <span>@item.Product.Name</span>
+                                </td>
+                                <td>@item.Product.Price.ToString("C")</td>
+                                <td>
+                                    <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center">
+                                        <input type="hidden" name="productId" value="@item.Product.Id" />
+                                        <button type="submit" name="action" value="decrease" class="btn btn-sm btn-outline-secondary me-1">-</button>
+                                        <input type="text" name="quantity" value="@item.Quantity" class="form-control form-control-sm text-center" style="width:50px;" readonly />
+                                        <button type="submit" name="action" value="increase" class="btn btn-sm btn-outline-secondary ms-1">+</button>
+                                    </form>
+                                </td>
+                                <td>@(item.Product.Price* item.Quantity).ToString("C")</td>
+                                <td>
+                                    <form asp-action="RemoveItem" method="post">
+                                        <input type="hidden" name="productId" value="@item.Product.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td colspan="3" class="text-end">Grand Total:</td>
+                            <td>@Model.Sum(i => i.Product.Price * i.Quantity).ToString("C")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <a href="@Url.Action("Checkout", "Cart")" class="btn btn-success btn-lg">
+                    Proceed to Checkout
+                </a>
+            </div>
+        </div>
+    </div>
 }
