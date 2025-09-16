@@ -1,5 +1,4 @@
-﻿// Models/Product.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -48,11 +47,9 @@ namespace TanuiApp.Models
         [Display(Name = "Created Date")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // 🔗 Navigation Properties
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
-        // Navigation property to User (optional, but good practice)
         [ForeignKey("UserId")]
         public virtual Users? User { get; set; }
     }

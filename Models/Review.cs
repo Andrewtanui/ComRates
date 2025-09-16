@@ -15,7 +15,7 @@ namespace TanuiApp.Models
         public int Rating { get; set; }
 
         [Required, StringLength(500)]
-        public string Content { get; set; }  // ✅ Use this for review text
+        public string Content { get; set; } 
 
         public string UserId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;

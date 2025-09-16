@@ -13,6 +13,7 @@ namespace TanuiApp.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; } // ✅ WishlistItems
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         // ❌ Removed this line:
         // public object Comments { get; internal set; }
@@ -55,6 +56,9 @@ namespace TanuiApp.Data
             // Messages indexing
             builder.Entity<Message>()
                 .HasIndex(m => m.ThreadKey);
+
+            builder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.IsRead });
         }
     }
 }

@@ -1,0 +1,39 @@
+@model IEnumerable<TanuiApp.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Notifications</h2>
+        <form asp-action="MarkAllRead" method="post">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Mark all as read</button>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">You're all caught up.</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var n in Model)
+            {
+                <a class="list-group-item list-group-item-action d-flex justify-content-between @(n.IsRead ? "" : "list-group-item-warning")" href="@(n.Link ?? "#")">
+                    <div>
+                        <div class="fw-semibold">@n.Title</div>
+                        @if (!string.IsNullOrEmpty(n.Body))
+                        {
+                            <small class="text-muted">@n.Body</small>
+                        }
+                    </div>
+                    <small class="text-muted">@n.CreatedAt.ToString("g")</small>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+

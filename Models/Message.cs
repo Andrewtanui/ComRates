@@ -22,13 +22,11 @@ namespace TanuiApp.Models
 
         public bool IsRead { get; set; } = false;
 
-        // Optional context (e.g., product conversation)
         public int? ProductId { get; set; }
 
         [ForeignKey("ProductId")]
         public Product? Product { get; set; }
 
-        // Thread key groups messages between two users (and optional product)
         [Required]
         [StringLength(200)]
         public string ThreadKey { get; set; } = string.Empty;

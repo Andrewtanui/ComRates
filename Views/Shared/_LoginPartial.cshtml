@@ -4,6 +4,11 @@
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
+        <!--Profiles View-->
+        <li class="nav-item">
+            <a class="nav-link text-white" asp-controller="Profile" asp-action="PublicCatalog"><i class="bi bi-people me-1"></i>Profiles</a>
+        </li>
+
         <!-- Cart -->
         <li class="nav-item me-2">
             <a class="nav-link text-white position-relative" asp-controller="Cart" asp-action="MyCart" title="Shopping Cart">
@@ -20,16 +25,6 @@
                 <i class="bi bi-heart fs-5"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning small" id="wishlist-count">
                     2
-                </span>
-            </a>
-        </li>
-
-        <!-- Notifications -->
-        <li class="nav-item me-2">
-            <a class="nav-link text-white position-relative" asp-controller="Notifications" asp-action="Index" title="Notifications">
-                <i class="bi bi-bell fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info small" id="notification-count">
-                    5
                 </span>
             </a>
         </li>
@@ -63,7 +58,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" asp-controller="Seller" asp-action="MyListings">
+                    <a class="dropdown-item" asp-controller="Profile" asp-action="MyListings">
                         <i class="bi bi-shop me-2"></i>My Listings
                     </a>
                 </li>

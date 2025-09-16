@@ -155,6 +155,7 @@ try
         pattern: "{controller=Home}/{action=Index}/{id?}");
 
     app.MapHub<MessageHub>("/hubs/messages");
+    app.MapHub<NotificationHub>("/hubs/notifications");
 
     Console.WriteLine("Starting TanuiApp...");
     app.Run();

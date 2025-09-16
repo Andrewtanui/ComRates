@@ -189,6 +189,18 @@ namespace TanuiApp.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
+            // Create notification for recipient
+            var notification = new Notification
+            {
+                UserId = recipientId,
+                Type = "message",
+                Title = "New message",
+                Body = content.Length > 80 ? content.Substring(0, 80) + "..." : content,
+                Link = Url.Action("Chat", "Messages", new { withUserId = senderId, productId }, Request.Scheme)
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
             // Broadcast to SignalR group
             await _hubContext.Clients.Group(message.ThreadKey).SendAsync("ReceiveMessage", new
             {
@@ -198,6 +210,9 @@ namespace TanuiApp.Controllers
                 message.ProductId,
                 message.CreatedAt
             });
+
+            // Fire notification to recipient group
+            await _hubContext.Clients.Group($"user:{recipientId}").SendAsync("Notify", new { notification.Title, notification.Body, notification.Link });
 
             return RedirectToAction(nameof(Chat), new { withUserId = recipientId, productId });
         }
