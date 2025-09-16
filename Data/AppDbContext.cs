@@ -11,18 +11,15 @@ namespace TanuiApp.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
-        public DbSet<WishlistItem> WishlistItems { get; set; } // ✅ WishlistItems
+        public DbSet<WishlistItem> WishlistItems { get; set; } 
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
-        // ❌ Removed this line:
-        // public object Comments { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // CartItem relationships
+            
             builder.Entity<CartItem>()
                 .HasOne(c => c.Product)
                 .WithMany()
@@ -35,7 +32,7 @@ namespace TanuiApp.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ✅ WishlistItem relationships
+            
             builder.Entity<WishlistItem>()
                 .HasOne(w => w.Product)
                 .WithMany()
@@ -48,12 +45,12 @@ namespace TanuiApp.Data
                 .HasForeignKey(w => w.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ✅ Prevent duplicate wishlist items for same user/product
+            
             builder.Entity<WishlistItem>()
                 .HasIndex(w => new { w.UserId, w.ProductId })
                 .IsUnique();
 
-            // Messages indexing
+           
             builder.Entity<Message>()
                 .HasIndex(m => m.ThreadKey);
 
