@@ -125,12 +125,13 @@ namespace TanuiApp.Controllers
                 return RedirectToAction("Details", new { id = productId });
             }
 
+            var userId = User?.Identity?.Name ?? "";
             var review = new Review
             {
                 ProductId = productId,
                 Rating = rating,
                 Content = content,
-                UserId = User?.Identity?.Name,
+                UserId = userId,
                 CreatedAt = DateTime.Now
             };
 
@@ -184,16 +185,35 @@ namespace TanuiApp.Controllers
             {
                 try
                 {
-                    var imageUrl = await _imageStorageService.SaveProductImageAsync(vm.ImageFile);
+                    var imageUrls = new List<string>();
+                    if (vm.ImageFiles != null && vm.ImageFiles.Count > 0)
+                    {
+                        int count = 0;
+                        foreach (var file in vm.ImageFiles)
+                        {
+                            if (file != null && count < 5)
+                            {
+                                var url = await _imageStorageService.SaveProductImageAsync(file);
+                                if (!string.IsNullOrEmpty(url))
+                                {
+                                    imageUrls.Add(url);
+                                    count++;
+                                }
+                            }
+                        }
+                    }
 
+                    var userId = _userManager.GetUserId(User) ?? "";
                     var product = new Product
                     {
                         Name = vm.Name,
                         Description = vm.Description,
                         Price = vm.Price,
                         Category = vm.Category,
-                        ImageUrl = imageUrl,
-                        UserId = _userManager.GetUserId(User),
+                        Quantity = vm.Quantity,
+                        ImageUrl = imageUrls.FirstOrDefault(), // fallback for legacy
+                        ImageUrlsString = string.Join(",", imageUrls),
+                        UserId = userId,
                         CreatedAt = DateTime.Now
                     };
 
@@ -212,6 +232,88 @@ namespace TanuiApp.Controllers
 
             return View(vm);
         }
+
+            [Authorize]
+            public async Task<IActionResult> Edit(int id)
+            {
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+                var currentUserId = _userManager.GetUserId(User);
+                if (product == null || product.UserId != currentUserId)
+                    return NotFound();
+
+                var vm = new ProductCreateViewModel
+                {
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Category = product.Category,
+                    Quantity = product.Quantity
+                    // Images not loaded here; handled in view
+                };
+                ViewBag.ExistingImages = product.ImageUrls;
+                ViewBag.ProductId = product.Id;
+                return View(vm);
+            }
+
+            [HttpPost]
+            [Authorize]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> Edit(int id, ProductCreateViewModel vm)
+            {
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+                var currentUserId = _userManager.GetUserId(User);
+                if (product == null || product.UserId != currentUserId)
+                    return NotFound();
+
+                if (ModelState.IsValid)
+                {
+                    product.Name = vm.Name;
+                    product.Description = vm.Description;
+                    product.Price = vm.Price;
+                    product.Category = vm.Category;
+                    product.Quantity = vm.Quantity;
+
+                    var imageUrls = product.ImageUrls ?? new List<string>();
+                    if (vm.ImageFiles != null && vm.ImageFiles.Count > 0)
+                    {
+                        foreach (var file in vm.ImageFiles)
+                        {
+                            if (file != null && imageUrls.Count < 5)
+                            {
+                                var url = await _imageStorageService.SaveProductImageAsync(file);
+                                if (!string.IsNullOrEmpty(url))
+                                    imageUrls.Add(url);
+                            }
+                        }
+                    }
+                    // Remove images if needed (handled in view)
+                    product.ImageUrlsString = string.Join(",", imageUrls);
+                    product.ImageUrl = imageUrls.FirstOrDefault();
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Product updated successfully!";
+                    return RedirectToAction("MyListings", "Profile");
+                }
+                ViewBag.ExistingImages = product.ImageUrls;
+                ViewBag.ProductId = product.Id;
+                return View(vm);
+            }
+
+            [HttpPost]
+            [Authorize]
+            [ValidateAntiForgeryToken]
+            public async Task<IActionResult> Delete(int id)
+            {
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+                var currentUserId = _userManager.GetUserId(User);
+                if (product == null || product.UserId != currentUserId)
+                    return NotFound();
+
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Product deleted.";
+                return RedirectToAction("MyListings", "Profile");
+            }
 
         private async Task UpdateProductRating(int productId)
         {

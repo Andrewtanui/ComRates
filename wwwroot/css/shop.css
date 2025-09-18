@@ -1,0 +1,49 @@
+/* Lightweight shop styles to improve MyCart, MyOrders and Wishlist look */
+:root{
+    --bg-card: #101224;
+    --muted: #9fb0f3;
+    --accent: #5b78c6;
+    --accent-2: #2d3a6e;
+    --surface: #1a1b2e;
+    --placeholder: #2b2f4a;
+}
+
+.shop-container { padding: 1rem 0; }
+
+.cart-layout { display: flex; gap: 1.25rem; align-items: flex-start; }
+.cart-items { flex: 1 1 60%; }
+.cart-summary { width: 320px; background: var(--surface); border-radius: 12px; padding: 1rem; box-shadow: 0 8px 30px rgba(10,12,30,0.6); }
+
+.product-row { display: flex; gap: 1rem; align-items: center; padding: .75rem; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .18s ease; }
+.product-row:hover { background: rgba(255,255,255,0.01); }
+.product-thumb { width:72px; height:72px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--placeholder); display:block; }
+.product-meta { flex: 1; }
+.product-meta h6 { margin: 0 0 .25rem 0; color: #e6eaf8; font-weight:600; }
+.product-meta p { margin:0; color:var(--muted); font-size:.9rem }
+
+.qty-controls { display:flex; align-items:center; gap:.5rem }
+.qty-controls .form-control[readonly] { width:48px; text-align:center; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted) }
+
+/* subtle fade-in for cards */
+.order-card, .card, .wishlist-card { opacity:0; transform: translateY(8px); animation: fadeUp .32s ease forwards; }
+@keyframes fadeUp { to { opacity:1; transform:none } }
+
+.summary-line { display:flex; justify-content:space-between; padding:.5rem 0; color:var(--muted); }
+.summary-total { font-weight:700; color:#fff; font-size:1.15rem }
+.btn-checkout { width:100%; background:linear-gradient(90deg,var(--accent),#7fa0e6); border:none; color:#08102a; font-weight:700; padding:.6rem; border-radius:8px; box-shadow: 0 8px 24px rgba(60,90,160,0.12); }
+
+.order-card { background: var(--surface); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 6px 20px rgba(10,12,30,0.55); }
+.order-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem }
+.badge-status { padding:.25rem .5rem; border-radius:6px; font-weight:600; font-size:.85rem; color:#fff }
+.badge-status.pending { background:#f0ad4e; color:#111 }
+.badge-status.completed { background:#28a745 }
+.badge-status.cancelled { background:#d9534f }
+
+.wishlist-card { transition:transform .18s ease, box-shadow .18s ease; border-radius:8px; overflow:hidden }
+.wishlist-card:hover { transform:translateY(-6px); box-shadow:0 18px 46px rgba(15,18,40,0.6) }
+.wishlist-thumb { width:100%; height:160px; object-fit:cover; border-top-left-radius: .25rem; border-top-right-radius: .25rem }
+
+@media (max-width: 767px){
+    .cart-layout { flex-direction:column }
+    .cart-summary { width:100% }
+}

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TanuiApp.Data;
 
@@ -11,9 +12,11 @@ using TanuiApp.Data;
 namespace TanuiApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917084608_AddOrderAndOrderItemTables")]
+    partial class AddOrderAndOrderItemTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -471,7 +474,7 @@ namespace TanuiApp.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("County")
+                    b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -490,15 +493,9 @@ namespace TanuiApp.Migrations
                     b.Property<bool>("EmailNotifications")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Estate")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsOnCampus")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsPublicProfile")
                         .HasColumnType("bit");
@@ -541,21 +538,15 @@ namespace TanuiApp.Migrations
                     b.Property<bool>("SmsNotifications")
                         .HasColumnType("bit");
 
+                    b.Property<string>("State")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
-
-                    b.Property<string>("University")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UniversityCounty")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Ward")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

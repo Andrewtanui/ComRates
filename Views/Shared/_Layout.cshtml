@@ -17,14 +17,13 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TanuiApp.styles.css" asp-append-version="true" />
 
-    <!-- Page-specific styles -->
     @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
-        <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-toggleable-lg fixed-top navbar-light bg-success shadow-sm">
+        <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-toggleable-lg fixed-top navbar-light shadow-sm">
             <div class="container-fluid">
-                <a class="navbar-brand text-white fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-shop me-2"></i>ComRates
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
@@ -34,7 +33,7 @@
                 <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1 me-3">
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="bi bi-house me-1"></i>Home
                             </a>
                         </li>
@@ -44,17 +43,16 @@
                             @await Component.InvokeAsync("CategoryMenu")
 
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
+                                <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" asp-controller="Products" asp-action="Create"><i class="bi bi-shop me-1"></i>Sell</a>
+                                <a class="nav-link" asp-controller="Products" asp-action="Create"><i class="bi bi-shop me-1"></i>Sell</a>
                             </li>
                         }
 
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle me-1"></i>About</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle me-1"></i>About</a>
                         </li>
-                        
                     </ul>
 
                     @if (SignInManager.IsSignedIn(User))
@@ -82,21 +80,26 @@
         @RenderBody()
     </main>
 
-    
-
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     <script>
+        // Transparent-to-solid navbar
         window.addEventListener("scroll", function () {
             const navbar = document.getElementById("mainNavbar");
-            if (window.scrollY > 50) {
-                navbar.classList.add("transparent");
+            const heroHeight = document.querySelector('.hero-section').offsetHeight;
+
+            if (window.scrollY > heroHeight) {
+                navbar.classList.add('solid');
+                navbar.classList.remove('transparent');
             } else {
-                navbar.classList.remove("transparent");
+                navbar.classList.remove('solid');
+                navbar.classList.add('transparent');
             }
         });
+
         // Notifications SignalR client (lazy inject script)
         (function(){
             const badge = document.getElementById('notifBadge');

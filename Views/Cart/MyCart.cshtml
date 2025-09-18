@@ -1,70 +1,65 @@
 ﻿@model IEnumerable<TanuiApp.Models.CartItem>
 
-<h2 class="mb-4">🛒 My Cart</h2>
-
-@if (!Model.Any())
-{
-    <div class="alert alert-info" role="alert">
-        Your cart is empty.
-    </div>
-}
-else
-{
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Total</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="d-flex align-items-center">
-                                    <img src="@item.Product.ImageUrl" alt="@item.Product.Name" width="60" class="me-3 rounded">
-                                    <span>@item.Product.Name</span>
-                                </td>
-                                <td>@item.Product.Price.ToString("C")</td>
-                                <td>
-                                    <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center">
-                                        <input type="hidden" name="productId" value="@item.Product.Id" />
-                                        <button type="submit" name="action" value="decrease" class="btn btn-sm btn-outline-secondary me-1">-</button>
-                                        <input type="text" name="quantity" value="@item.Quantity" class="form-control form-control-sm text-center" style="width:50px;" readonly />
-                                        <button type="submit" name="action" value="increase" class="btn btn-sm btn-outline-secondary ms-1">+</button>
-                                    </form>
-                                </td>
-                                <td>@(item.Product.Price* item.Quantity).ToString("C")</td>
-                                <td>
-                                    <form asp-action="RemoveItem" method="post">
-                                        <input type="hidden" name="productId" value="@item.Product.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr class="fw-bold">
-                            <td colspan="3" class="text-end">Grand Total:</td>
-                            <td>@Model.Sum(i => i.Product.Price * i.Quantity).ToString("C")</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-end mt-3">
-                <a href="@Url.Action("Checkout", "Cart")" class="btn btn-success btn-lg">
-                    Proceed to Checkout
-                </a>
-            </div>
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">My Cart</h2>
+        <div>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-outline-secondary me-2">Continue Shopping</a>
+            <a href="@Url.Action("Checkout", "Cart")" class="btn btn-primary">Proceed to Checkout</a>
         </div>
     </div>
-}
+
+    @if (!Model.Any())
+    {
+        <div class="text-center p-4">
+            <img src="/images/empty-cart.svg" alt="Empty cart" style="max-width:360px;width:70%;height:auto" />
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@(item.Product?.Id ?? 0)" class="text-decoration-none text-dark">
+                                <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? "/images/placeholder-product.svg" : item.Product.ImageUrl)" class="card-img-top" alt="@(item.Product?.Name ?? "product")" onerror="this.onerror=null;this.src='/images/placeholder-product.svg'" />
+                            </a>
+                            <div class="card-body">
+                                <h5 class="card-title">@(item.Product?.Name ?? "[Product removed]")</h5>
+                                <p class="text-muted">@(item.Product?.Description?.Split('.')[0] ?? "")</p>
+                                <p class="fw-bold mb-2">@(item.Product != null ? item.Product.Price.ToString("C") : "-")</p>
+
+                                <form asp-action="UpdateQuantity" method="post" class="d-flex qty-controls align-items-center">
+                                    <input type="hidden" name="productId" value="@(item.Product?.Id ?? 0)" />
+                                    <button type="submit" name="action" value="decrease" class="btn btn-sm btn-outline-secondary">-</button>
+                                    <input type="text" name="quantity" value="@item.Quantity" class="form-control form-control-sm mx-2" readonly style="width:56px;text-align:center;" />
+                                    <button type="submit" name="action" value="increase" class="btn btn-sm btn-outline-secondary">+</button>
+                                </form>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between align-items-center">
+                                <div class="text-muted">Total: <strong>@(item.Product != null ? (item.Product.Price * item.Quantity).ToString("C") : "-")</strong></div>
+                                <form asp-action="RemoveItem" method="post">
+                                    <input type="hidden" name="productId" value="@(item.Product?.Id ?? 0)" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <div class="card p-3" style="min-width:260px;">
+                <h6 class="mb-3">Order Summary</h6>
+                <div class="d-flex justify-content-between"><span>Items</span><span>@Model.Sum(i => i.Quantity)</span></div>
+                <div class="d-flex justify-content-between"><span>Subtotal</span><span>@Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("C")</span></div>
+                <div class="d-flex justify-content-between"><span>Shipping</span><span>Calculated at checkout</span></div>
+                <hr />
+                <div class="d-flex justify-content-between fw-bold"><span>Total</span><span>@Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("C")</span></div>
+            </div>
+        </div>
+    }
+</div>

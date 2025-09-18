@@ -14,6 +14,8 @@ namespace TanuiApp.Data
         public DbSet<WishlistItem> WishlistItems { get; set; } 
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -56,6 +58,19 @@ namespace TanuiApp.Data
 
             builder.Entity<Notification>()
                 .HasIndex(n => new { n.UserId, n.IsRead });
+
+            // Order relationships
+            builder.Entity<Order>()
+                .HasMany(o => o.Items)
+                .WithOne(oi => oi.Order)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<OrderItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

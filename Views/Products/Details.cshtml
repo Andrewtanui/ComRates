@@ -5,7 +5,35 @@
 <div class="container my-5">
     <div class="row">
         <div class="col-md-6">
-            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow" />
+            @if (Model.ImageUrls != null && Model.ImageUrls.Count > 0)
+            {
+                <div id="productImagesCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        @for (int i = 0; i < Model.ImageUrls.Count && i < 5; i++)
+                        {
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@Model.ImageUrls[i]" class="d-block w-100 rounded shadow" alt="Product Image @(i + 1)"
+                                    style="max-height:400px;object-fit:contain;" />
+                            </div>
+                        }
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#productImagesCarousel"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#productImagesCarousel"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            }
+            else
+            {
+                <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow mb-3"
+                    style="max-height:400px;object-fit:contain;" />
+            }
         </div>
         <div class="col-md-6">
             <h2 class="fw-bold">@Model.Name</h2>
@@ -21,13 +49,14 @@
                 </p>
                 @if (User.Identity.IsAuthenticated && Model.User.Id != _userManager.GetUserId(User))
                 {
-                    <a class="btn btn-outline-success btn-sm" asp-controller="Messages" asp-action="Chat" asp-route-withUserId="@Model.User.Id" asp-route-productId="@Model.Id">
+                    <a class="btn btn-outline-success btn-sm" asp-controller="Messages" asp-action="Chat"
+                        asp-route-withUserId="@Model.User.Id" asp-route-productId="@Model.Id">
                         <i class="bi bi-chat-dots"></i> Message Seller
                     </a>
                 }
             }
 
-            <form asp-action="AddToCart" method="post">
+            <form asp-controller="Cart" asp-action="AddToCart" method="post">
                 <input type="hidden" name="productId" value="@Model.Id" />
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-cart-plus"></i> Add to Cart
@@ -65,8 +94,7 @@
                     @if (User.Identity.IsAuthenticated &&
                                 (review.UserId == _userManager.GetUserId(User) || Model.User?.Id == _userManager.GetUserId(User)))
                     {
-                        <button type="button" class="btn btn-sm btn-danger delete-review"
-                                data-id="@review.Id">
+                        <button type="button" class="btn btn-sm btn-danger delete-review" data-id="@review.Id">
                             Delete
                         </button>
                     }
@@ -201,8 +229,8 @@
             transition: color 0.2s;
         }
 
-            .star:hover {
-                color: gold;
-            }
+        .star:hover {
+            color: gold;
+        }
     </style>
 }

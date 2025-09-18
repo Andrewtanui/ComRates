@@ -24,7 +24,28 @@ namespace TanuiApp.Models
         [Display(Name = "Price")]
         public decimal Price { get; set; }
 
-        [Display(Name = "Image")]
+        [Display(Name = "Images")]
+        public string? ImageUrlsString { get; set; } // comma-separated URLs
+
+        [NotMapped]
+        public List<string> ImageUrls
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ImageUrlsString)) return new List<string>();
+                return ImageUrlsString.Split(',').Select(u => u.Trim()).Where(u => !string.IsNullOrEmpty(u)).ToList();
+            }
+            set
+            {
+                ImageUrlsString = value != null ? string.Join(",", value) : null;
+            }
+        }
+
+        [Required]
+    [Range(0, int.MaxValue, ErrorMessage = "Quantity must be 0 or more.")]
+    public int Quantity { get; set; } = 1;
+
+        // For backward compatibility
         public string? ImageUrl { get; set; }
 
         [Required(ErrorMessage = "Category is required.")]

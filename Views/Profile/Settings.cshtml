@@ -146,23 +146,55 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="State" class="form-label"></label>
-                                    <input asp-for="State" class="form-control" />
-                                    <span asp-validation-for="State" class="text-danger"></span>
+                                    <label asp-for="University" class="form-label"></label>
+                                    <input asp-for="University" class="form-control" />
+                                    <span asp-validation-for="University" class="text-danger"></span>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="UniversityCounty" class="form-label"></label>
+                                    <input asp-for="UniversityCounty" class="form-control" />
+                                    <span asp-validation-for="UniversityCounty" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input asp-for="IsOnCampus" class="form-check-input" type="checkbox" id="profile-isoncampus" />
+                                    <label class="form-check-label" for="profile-isoncampus">I live around the university (on-campus)</label>
+                                </div>
+                            </div>
+
+                            <div id="profile-personal-address">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="County" class="form-label"></label>
+                                        <input asp-for="County" class="form-control" />
+                                        <span asp-validation-for="County" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Ward" class="form-label"></label>
+                                        <input asp-for="Ward" class="form-control" />
+                                        <span asp-validation-for="Ward" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Estate" class="form-label"></label>
+                                        <input asp-for="Estate" class="form-control" />
+                                        <span asp-validation-for="Estate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="PostalCode" class="form-label"></label>
                                     <input asp-for="PostalCode" class="form-control" />
                                     <span asp-validation-for="PostalCode" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Country" class="form-label"></label>
-                                    <input asp-for="Country" class="form-control" />
-                                    <span asp-validation-for="Country" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -217,4 +249,20 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        (function() {
+            const checkbox = document.getElementById('profile-isoncampus');
+            const personal = document.getElementById('profile-personal-address');
+
+            function toggle() {
+                if (!checkbox) return;
+                personal.style.display = checkbox.checked ? 'none' : 'flex';
+            }
+
+            if (checkbox) {
+                checkbox.addEventListener('change', toggle);
+                toggle();
+            }
+        })();
+    </script>
 }

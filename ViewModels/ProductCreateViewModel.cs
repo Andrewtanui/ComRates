@@ -25,8 +25,13 @@ namespace TanuiApp.ViewModels
         [Display(Name = "Category")]
         public string Category { get; set; } = string.Empty;
 
-        [Display(Name = "Upload Image")]
-        public IFormFile? ImageFile { get; set; }
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Quantity must be 0 or more.")]
+        [Display(Name = "Quantity")]
+        public int Quantity { get; set; } = 1;
+
+        [Display(Name = "Upload Images")]
+        public List<IFormFile>? ImageFiles { get; set; }
     }
 }
 
