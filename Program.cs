@@ -57,6 +57,7 @@ try
 
     // App services
     builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
+    builder.Services.AddSingleton<IChatbotService, ChatbotService>();
 
     // Configure logging
     builder.Services.AddLogging(logging =>

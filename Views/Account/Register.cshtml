@@ -8,40 +8,164 @@
 
 <div class="account-container">
     <div class="account-box">
-        <h2 class="text-center mb-4">Register</h2>
-        <form asp-action="Register" method="post">
+        <h2 class="text-center mb-3">Create your account</h2>
+        <div class="progress mb-2" style="height: 6px;">
+            <div id="onboardProgress" class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="d-flex justify-content-between small text-muted mb-3">
+            <span id="stepLbl1" class="fw-semibold">1. Basic</span>
+            <span id="stepLbl2">2. Profile</span>
+            <span id="stepLbl3">3. Address</span>
+            <span id="stepLbl4">4. Preferences</span>
+        </div>
+        <form asp-action="Register" method="post" id="onboardForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="mb-3">
-                <label asp-for="Name" class="form-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+
+            <div class="onboard-step" data-step="1">
+                <h5 class="mb-3">Basic details</h5>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Jane Doe" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Min 8 characters" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="form-text"><span id="pwdStrengthText">Password strength: -</span></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat your password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-success" data-next>Continue</button>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+
+            <div class="onboard-step d-none" data-step="2">
+                <h5 class="mb-3">Profile</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="e.g. +254700000000" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DateOfBirth" class="form-label"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="ProfilePictureUrl" class="form-label"></label>
+                    <input asp-for="ProfilePictureUrl" class="form-control" placeholder="https://example.com/me.jpg" />
+                    <span asp-validation-for="ProfilePictureUrl" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Bio" class="form-label"></label>
+                    <textarea asp-for="Bio" rows="3" class="form-control" placeholder="What do you like to buy or sell?"></textarea>
+                    <span asp-validation-for="Bio" class="text-danger"></span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-prev>Back</button>
+                    <button type="button" class="btn btn-success" data-next>Continue</button>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+
+            <div class="onboard-step d-none" data-step="3">
+                <h5 class="mb-3">Address</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Address" class="form-label"></label>
+                        <input asp-for="Address" class="form-control" placeholder="Street and house number" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="City" class="form-label"></label>
+                        <select asp-for="City" class="form-select">
+                            <option value="">Select city</option>
+                            <option>Nairobi</option>
+                            <option>Mombasa</option>
+                            <option>Kisumu</option>
+                            <option>Nakuru</option>
+                            <option>Eldoret</option>
+                            <option>Thika</option>
+                            <option>Machakos</option>
+                            <option>Nyeri</option>
+                            <option>Meru</option>
+                            <option>Other</option>
+                        </select>
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="State" class="form-label"></label>
+                        <input asp-for="State" class="form-control" placeholder="County/State" />
+                        <span asp-validation-for="State" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="PostalCode" class="form-label"></label>
+                        <input asp-for="PostalCode" class="form-control" placeholder="e.g. 00100" />
+                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Country" class="form-label"></label>
+                        <select asp-for="Country" class="form-select">
+                            <option value="">Select country</option>
+                            <option>Kenya</option>
+                            <option>Tanzania</option>
+                            <option>Uganda</option>
+                            <option>Rwanda</option>
+                            <option>Ethiopia</option>
+                            <option>South Sudan</option>
+                            <option>United States</option>
+                            <option>United Kingdom</option>
+                            <option>India</option>
+                            <option>Other</option>
+                        </select>
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-prev>Back</button>
+                    <button type="button" class="btn btn-success" data-next>Continue</button>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label"></label>
-                <input asp-for="ConfirmPassword" class="form-control" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
-            <div class="float-end">
-                <a asp-controller="Account" asp-action="VerifyEmail" class="text-decoration-none">
-                    Forgot password?
-                </a>
-            </div>
-            <input type="submit" value="Register" class="btn btn-success w-100 p-2" />
-            <p class="text-center mt-2">
-                Already have an account? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Login</a>
-            </p>
-            <div class="text-center">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+
+            <div class="onboard-step d-none" data-step="4">
+                <h5 class="mb-3">Preferences</h5>
+                <div class="form-check mb-2">
+                    <input asp-for="EmailNotifications" class="form-check-input" type="checkbox" />
+                    <label asp-for="EmailNotifications" class="form-check-label"></label>
+                </div>
+                <div class="form-check mb-2">
+                    <input asp-for="SmsNotifications" class="form-check-input" type="checkbox" />
+                    <label asp-for="SmsNotifications" class="form-check-label"></label>
+                </div>
+                <div class="form-check mb-3">
+                    <input asp-for="IsPublicProfile" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsPublicProfile" class="form-check-label"></label>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-prev>Back</button>
+                    <button type="submit" class="btn btn-success">Create account</button>
+                </div>
+                <p class="text-center mt-2">
+                    Already have an account? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Login</a>
+                </p>
+                <div class="text-center">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+                </div>
             </div>
         </form>
     </div>
@@ -51,4 +175,82 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
     }
+    <script>
+        (function(){
+            const form = document.getElementById('onboardForm');
+            const steps = Array.from(document.querySelectorAll('.onboard-step'));
+            const progress = document.getElementById('onboardProgress');
+            const lbls = [
+                document.getElementById('stepLbl1'),
+                document.getElementById('stepLbl2'),
+                document.getElementById('stepLbl3'),
+                document.getElementById('stepLbl4')
+            ];
+            const email = form.querySelector('input[name="Email"]');
+            const pwd = form.querySelector('input[name="Password"]');
+            const pwd2 = form.querySelector('input[name="ConfirmPassword"]');
+            const strengthText = document.getElementById('pwdStrengthText');
+            let index = 0;
+            function show(i){
+                steps.forEach((s,idx)=> s.classList.toggle('d-none', idx!==i));
+                index = i;
+                if(progress){
+                    const pct = Math.round(((i+1)/steps.length)*100);
+                    progress.style.width = pct + '%';
+                    progress.setAttribute('aria-valuenow', String(pct));
+                }
+                lbls.forEach((l,idx)=>{
+                    if(!l) return;
+                    l.classList.toggle('fw-semibold', idx===i);
+                    l.classList.toggle('text-success', idx < i);
+                });
+            }
+            function validateStep(i){
+                // Simple required validation for visible inputs with required attribute or for known required fields on step 1
+                const container = steps[i];
+                const inputs = Array.from(container.querySelectorAll('input, textarea'));
+                let ok = true;
+                for(const el of inputs){
+                    // Focus basic requireds for step 1
+                    if(i===0 && (el.name.endsWith('.Name') || el.name.endsWith('.Email') || el.name.endsWith('.Password') || el.name.endsWith('.ConfirmPassword'))){
+                        if(!el.value || !el.value.trim()){ ok=false; el.classList.add('is-invalid'); }
+                        else el.classList.remove('is-invalid');
+                    }
+                }
+                if(i===0){
+                    // Email regex quick check
+                    const emailOk = email && /.+@@.+\..+/.test(email.value);
+                    if(!emailOk){ ok=false; email?.classList.add('is-invalid'); }
+                    else email?.classList.remove('is-invalid');
+                    // Password strength: min 8, letter+number
+                    const p = pwd?.value || '';
+                    const strong = p.length>=8 && /[A-Za-z]/.test(p) && /\d/.test(p);
+                    if(!strong){ ok=false; pwd?.classList.add('is-invalid'); }
+                    else pwd?.classList.remove('is-invalid');
+                    // Match
+                    if((pwd2?.value||'') !== p){ ok=false; pwd2?.classList.add('is-invalid'); }
+                    else pwd2?.classList.remove('is-invalid');
+                }
+                return ok;
+            }
+            function updateStrength(){
+                if(!pwd || !strengthText) return;
+                const p = pwd.value || '';
+                let score = 0; if(p.length>=8) score++; if(/[A-Z]/.test(p)) score++; if(/[a-z]/.test(p)) score++; if(/\d/.test(p)) score++; if(/[^A-Za-z0-9]/.test(p)) score++;
+                const labels = ['Very weak','Weak','Fair','Good','Strong'];
+                const idx = Math.max(0, Math.min(labels.length-1, score-1));
+                strengthText.textContent = 'Password strength: ' + labels[idx];
+            }
+            pwd?.addEventListener('input', updateStrength);
+            updateStrength();
+            document.querySelectorAll('[data-next]').forEach(btn=> btn.addEventListener('click', ()=>{
+                if(!validateStep(index)) return;
+                if(index < steps.length-1) show(index+1);
+            }));
+            document.querySelectorAll('[data-prev]').forEach(btn=> btn.addEventListener('click', ()=>{
+                if(index > 0) show(index-1);
+            }));
+            show(0);
+        })();
+    </script>
 }

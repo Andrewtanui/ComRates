@@ -2,8 +2,8 @@
 :root{
     --bg-card: #101224;
     --muted: #9fb0f3;
-    --accent: #5b78c6;
-    --accent-2: #2d3a6e;
+    --accent: rgb(17,51,75); /* primary */
+    --accent-2: rgb(13,39,57); /* darker */
     --surface: #1a1b2e;
     --placeholder: #2b2f4a;
 }
@@ -30,7 +30,7 @@
 
 .summary-line { display:flex; justify-content:space-between; padding:.5rem 0; color:var(--muted); }
 .summary-total { font-weight:700; color:#fff; font-size:1.15rem }
-.btn-checkout { width:100%; background:linear-gradient(90deg,var(--accent),#7fa0e6); border:none; color:#08102a; font-weight:700; padding:.6rem; border-radius:8px; box-shadow: 0 8px 24px rgba(60,90,160,0.12); }
+.btn-checkout { width:100%; background:linear-gradient(90deg,var(--accent),#7fa0e6); border:none; color:#08102a; font-weight:700; padding:.6rem; border-radius:8px; box-shadow: 0 8px 24px rgba(17,51,75,0.12); }
 
 .order-card { background: var(--surface); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 6px 20px rgba(10,12,30,0.55); }
 .order-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem }

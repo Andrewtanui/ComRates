@@ -121,5 +121,9 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <partial name="_AskAIWidget" />
+    }
 </body>
 </html>

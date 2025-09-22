@@ -7,6 +7,7 @@ using TanuiApp.Models;
 using TanuiApp.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using TanuiApp.ViewModels;
+using TanuiApp.Services;
 
 namespace TanuiApp.Controllers
 {
@@ -16,12 +17,14 @@ namespace TanuiApp.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<Users> _userManager;
         private readonly IHubContext<MessageHub> _hubContext;
+        private readonly IChatbotService _chatbot;
 
-        public MessagesController(AppDbContext context, UserManager<Users> userManager, IHubContext<MessageHub> hubContext)
+        public MessagesController(AppDbContext context, UserManager<Users> userManager, IHubContext<MessageHub> hubContext, IChatbotService chatbot)
         {
             _context = context;
             _userManager = userManager;
             _hubContext = hubContext;
+            _chatbot = chatbot;
         }
 
         public async Task<IActionResult> Inbox()
@@ -41,6 +44,20 @@ namespace TanuiApp.Controllers
                 .ToListAsync();
 
             return View(threads);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AskBot([FromForm] string prompt)
+        {
+            if (string.IsNullOrWhiteSpace(prompt))
+                return Json(new { ok = false, reply = "Please enter a question." });
+
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+            var (text, links) = await _chatbot.GetBotReplyWithLinksAsync(prompt, user?.FullName);
+            var linkDtos = links.Select(l => new { text = l.text, url = Url.Content(l.url) }).ToList();
+            return Json(new { ok = true, reply = text, links = linkDtos });
         }
 
         public async Task<IActionResult> Chat(string? withUserId, int? productId)

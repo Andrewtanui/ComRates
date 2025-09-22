@@ -2,6 +2,12 @@ html {
     font-size: 14px;
 }
 
+:root {
+    --primary: rgb(17,51,75); /* #11334B */
+    --primary-contrast: #ffffff;
+    --primary-strong: rgb(13,39,57);
+}
+
 @media (min-width: 768px) {
     html {
         font-size: 16px;
@@ -17,11 +23,11 @@ body {
     margin: 0;
     padding-top: 70px; /* space for fixed navbar */
     margin-bottom: 60px; /* footer spacing */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Lemon Milk', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #0b3d91;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--primary);
 }
 
 /* Navbar */
@@ -32,7 +38,7 @@ body {
     left: 0;
     width: 100%;
     height: 80px; /* increased height */
-    background-color: #0b3d91 !important; /* solid midnight blue */
+    background-color: var(--primary) !important; /* solid primary color */
     box-shadow: 0 2px 20px rgba(0,0,0,0.1);
     z-index: 1030;
     transition: all 0.4s ease;
@@ -44,13 +50,13 @@ body {
 /* Adjust links and brand to align vertically */
 #mainNavbar .nav-link,
 #mainNavbar .navbar-brand {
-    color: #fff;
+    color: var(--primary-contrast);
     line-height: 80px; /* match navbar height for vertical centering */
 }
 
 #mainNavbar .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #a6c8ff !important;
+    color: var(--primary-strong) !important;
 }
 
 
@@ -61,14 +67,14 @@ body {
     border-radius: 8px;
     padding: 0.5rem 0;
     margin-top: 0.5rem;
-    background-color: #0b3d91;
+    background-color: var(--primary);
 }
 
 .dropdown-item {
     padding: 0.5rem 1rem;
     transition: all 0.3s ease;
     font-weight: 500;
-    color: #fff;
+    color: var(--primary-contrast);
 }
 
 .dropdown-item:hover {
@@ -110,7 +116,7 @@ body {
     border-left: none;
     border-radius: 0 20px 20px 0;
     background-color: #fff;
-    color: #0b3d91;
+    color: var(--primary);
     border-color: #ced4da;
 }
 
@@ -122,7 +128,7 @@ body {
 /* Footer */
 .footer {
     font-size: 0.9rem;
-    background: linear-gradient(135deg, #0b3d91, #1a4ca6);
+    background: linear-gradient(135deg, var(--primary), #1a4ca6);
 }
 
 .footer h5, .footer h6 {
@@ -147,7 +153,7 @@ body {
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #0b3d91, #1a4ca6);
+    background: linear-gradient(135deg, var(--primary), #1a4ca6);
     border: none;
     box-shadow: 0 2px 4px rgba(11, 61, 145, 0.2);
 }
@@ -161,7 +167,7 @@ body {
 .btn-outline-success {
     border-width: 2px;
     font-weight: 600;
-    border-color: #0b3d91;
+    border-color: var(--primary);
     color: #0b3d91;
 }
 
@@ -175,7 +181,7 @@ body {
 .btn-light {
     background-color: #fff;
     border: 2px solid #fff;
-    color: #0b3d91;
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -196,7 +202,7 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(135deg, #0b3d91 0%, #1a4ca6 50%, #002366 100%);
+    background: url('/images/BGBLUEIMAGE.png') center center / cover no-repeat;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -299,7 +305,7 @@ body {
 }
 
 .category-card:hover {
-    background-color: #133c8c;
+    background-color: var(--primary-strong);
     color: white;
     transform: translateY(-5px);
 }
@@ -308,7 +314,7 @@ body {
 .stats-number {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #0b3d91;
+    color: var(--primary);
 }
 
 /* Testimonials */
@@ -324,7 +330,7 @@ body {
 
 .blockquote-footer cite {
     font-style: normal;
-    color: #0b3d91;
+    color: var(--primary);
     font-weight: 500;
 }
 
@@ -335,11 +341,11 @@ body {
 
 /* Utility Classes */
 .text-success {
-    color: #0b3d91 !important;
+    color: var(--primary) !important;
 }
 
 .bg-success {
-    background: linear-gradient(135deg, #0b3d91, #1a4ca6) !important;
+    background: linear-gradient(135deg, var(--primary), #1a4ca6) !important;
 }
 
 /* Responsive Design */

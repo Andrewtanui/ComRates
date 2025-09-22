@@ -68,6 +68,7 @@
                 <input id="contentInput" type="text" name="content" class="form-control" placeholder="Type a message..." required />
                 <button type="submit" class="btn btn-success"><i class="bi bi-send"></i></button>
             </form>
+            
         </div>
     </div>
 </div>
@@ -80,6 +81,7 @@
         const list = document.getElementById('messageList');
         const form = document.getElementById('sendForm');
         const contentInput = document.getElementById('contentInput');
+        
 
         if (threadKey) {
             const connection = new signalR.HubConnectionBuilder()
@@ -105,6 +107,7 @@
         function escapeHtml(str) {
             return str.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
         }
+        
     </script>
 }
 

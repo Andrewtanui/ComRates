@@ -57,12 +57,31 @@ namespace UsersApp.Controllers
                     FullName = model.Name,
                     Email = model.Email,
                     UserName = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    DateOfBirth = model.DateOfBirth,
+                    Address = model.Address,
+                    City = model.City,
+                    PostalCode = model.PostalCode,
+                    State = model.State,
+                    Country = model.Country,
+                    EmailNotifications = model.EmailNotifications,
+                    SmsNotifications = model.SmsNotifications,
+                    IsPublicProfile = model.IsPublicProfile
                 };
 
                 var result = await userManager.CreateAsync(users, model.Password);
 
                 if (result.Succeeded)
                 {
+                    if (!string.IsNullOrWhiteSpace(model.ProfilePictureUrl))
+                    {
+                        users.ProfilePictureUrl = model.ProfilePictureUrl;
+                    }
+                    if (!string.IsNullOrWhiteSpace(model.Bio))
+                    {
+                        users.Bio = model.Bio;
+                    }
+                    await userManager.UpdateAsync(users);
                     return RedirectToAction("Login", "Account");
                 }
                 else

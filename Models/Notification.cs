@@ -8,11 +8,11 @@ namespace TanuiApp.Models
         public int Id { get; set; }
 
         [Required]
-        public string UserId { get; set; } = string.Empty; // recipient
+        public string UserId { get; set; } = string.Empty; 
 
         [Required]
         [StringLength(200)]
-        public string Type { get; set; } = "message"; // message, review, order, etc.
+        public string Type { get; set; } = "message"; 
 
         [Required]
         [StringLength(200)]
@@ -28,4 +28,6 @@ namespace TanuiApp.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }
+
+
 

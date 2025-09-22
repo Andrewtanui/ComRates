@@ -1,0 +1,102 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+<style>
+    .askai-fab { position: fixed; right: 20px; bottom: 20px; z-index: 1050; }
+    .askai-panel { position: fixed; right: 20px; bottom: 84px; width: 320px; max-height: 60vh; z-index: 1050; display: none; }
+    .askai-messages { height: 240px; overflow: auto; }
+</style>
+
+<button id="askaiFab" type="button" class="btn btn-success rounded-circle shadow askai-fab" title="Ask AI" aria-label="Ask AI" style="width:56px;height:56px">
+    <i class="bi bi-stars"></i>
+    <span class="visually-hidden">Ask AI</span>
+    <form id="askaiTokenForm" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
+    <input type="hidden" id="askaiPostUrl" value="@Url.Action("AskBot", "Messages")" />
+    <input type="hidden" id="askaiToken" value="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    <input type="hidden" id="askaiHeaderName" value="@Antiforgery.GetAndStoreTokens(Context).HeaderName" />
+</button>
+
+<div id="askaiPanel" class="card shadow askai-panel">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-stars me-2"></i>AI Assistant</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="askaiClose">Close</button>
+    </div>
+    <div class="card-body p-2 d-flex flex-column">
+        <div id="askaiMessages" class="askai-messages mb-2 border rounded p-2 bg-light"></div>
+        <div class="input-group">
+            <input id="askaiInput" type="text" class="form-control" placeholder="Ask about shipping, returns, payments..." />
+            <button id="askaiSend" class="btn btn-success" type="button"><i class="bi bi-send"></i></button>
+        </div>
+    </div>
+    <div class="card-footer small text-muted">Powered by ML.NET</div>
+    <div id="askaiError" class="text-danger small d-none p-2"></div>
+</div>
+
+<script>
+    (function(){
+        const fab = document.getElementById('askaiFab');
+        const panel = document.getElementById('askaiPanel');
+        const closeBtn = document.getElementById('askaiClose');
+        const sendBtn = document.getElementById('askaiSend');
+        const input = document.getElementById('askaiInput');
+        const messages = document.getElementById('askaiMessages');
+        const errorBox = document.getElementById('askaiError');
+        const postUrl = document.getElementById('askaiPostUrl')?.value;
+        const token = document.getElementById('askaiToken')?.value;
+        const headerName = document.getElementById('askaiHeaderName')?.value || 'RequestVerificationToken';
+
+        function showPanel(){ panel.style.display = 'block'; setTimeout(()=> input?.focus(), 0); }
+        function hidePanel(){ panel.style.display = 'none'; }
+        function append(role, text){
+            const wrap = document.createElement('div');
+            wrap.className = 'mb-2';
+            const badge = role === 'you' ? '<span class="badge bg-primary me-1">You</span>' : '<span class="badge bg-success me-1">AI</span>';
+            wrap.innerHTML = badge + '<span>'+escapeHtml(text)+'</span>';
+            messages.appendChild(wrap);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        function appendLinks(links){
+            if(!Array.isArray(links) || links.length === 0) return;
+            const container = document.createElement('div');
+            container.className = 'mb-2';
+            for(const l of links){
+                const a = document.createElement('a');
+                a.className = 'btn btn-outline-secondary btn-sm me-2 mb-2';
+                a.href = l.url;
+                a.textContent = l.text;
+                container.appendChild(a);
+            }
+            messages.appendChild(container);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        function escapeHtml(str){ return String(str).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+        fab?.addEventListener('click', ()=>{ panel.style.display === 'none' ? showPanel() : hidePanel(); });
+        closeBtn?.addEventListener('click', hidePanel);
+        input?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendBtn?.click(); }});
+
+        sendBtn?.addEventListener('click', async ()=>{
+            const q = input.value.trim();
+            if(!q) return;
+            errorBox.classList.add('d-none');
+            append('you', q);
+            input.value='';
+            try{
+                const body = new URLSearchParams();
+                body.append('prompt', q);
+                body.append('__RequestVerificationToken', token || '');
+                const resp = await fetch(postUrl, { method: 'POST', headers: { 'Content-Type':'application/x-www-form-urlencoded' }, body: body.toString() });
+                if(!resp.ok){ throw new Error('Request failed: '+resp.status); }
+                const json = await resp.json();
+                append('ai', json?.reply || 'No reply');
+                appendLinks(json?.links || []);
+            }catch(err){
+                errorBox.textContent = 'Error: ' + (err?.message || err);
+                errorBox.classList.remove('d-none');
+            }
+        });
+    })();
+</script>
+
+
