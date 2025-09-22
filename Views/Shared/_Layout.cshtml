@@ -21,16 +21,41 @@
 </head>
 <body>
     <header>
-        <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-toggleable-lg fixed-top navbar-light shadow-sm">
+        <nav id="mainNavbar" class="navbar navbar-expand-lg fixed-top shadow-sm">
             <div class="container-fluid">
+                <!-- Brand -->
                 <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-shop me-2"></i>ComRates
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+
+                <!-- Right-side controls: Search + Chat + Hamburger -->
+                <div class="d-flex align-items-center order-lg-3 order-1">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <!-- Search (desktop only) -->
+                        <form class="d-none d-md-flex me-2" asp-controller="Products" asp-action="Search" method="get">
+                            <div class="input-group">
+                                <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
+                                <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </form>
+
+                        <!-- Chat button -->
+                        <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    }
+
+                    <!-- Hamburger -->
+                    <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarNav" aria-controls="navbarNav"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <!-- Collapsible Nav -->
+                <div class="collapse navbar-collapse order-lg-2 order-3" id="navbarNav">
                     <ul class="navbar-nav flex-grow-1 me-3">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
@@ -43,28 +68,34 @@
                             @await Component.InvokeAsync("CategoryMenu")
 
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
+                                <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Products" asp-action="Create"><i class="bi bi-shop me-1"></i>Sell</a>
+                                <a class="nav-link" asp-controller="Products" asp-action="Create">
+                                    <i class="bi bi-shop me-1"></i>Sell
+                                </a>
                             </li>
                         }
 
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle me-1"></i>About</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="About">
+                                <i class="bi bi-info-circle me-1"></i>About
+                            </a>
                         </li>
                     </ul>
 
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <form class="d-flex me-3" asp-controller="Products" asp-action="Search" method="get">
+                        <!-- Search (mobile only) -->
+                        <form class="d-md-none mb-2" asp-controller="Products" asp-action="Search" method="get">
                             <div class="input-group">
-                                <input class="form-control" type="search" name="query" placeholder="Search products..." aria-label="Search">
+                                <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
                                 <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
                             </div>
                         </form>
-                        <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat"><i class="bi bi-chat-dots"></i> Chats</a>
-                        <a class="btn btn-light position-relative" asp-controller="Notifications" asp-action="Index">
+
+                        <!-- Notifications -->
+                        <a class="btn btn-light position-relative me-2" asp-controller="Notifications" asp-action="Index">
                             <i class="bi bi-bell"></i>
                             <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                         </a>
@@ -89,9 +120,10 @@
         // Transparent-to-solid navbar
         window.addEventListener("scroll", function () {
             const navbar = document.getElementById("mainNavbar");
-            const heroHeight = document.querySelector('.hero-section').offsetHeight;
+            const hero = document.querySelector('.hero-section');
+            if (!hero) return;
 
-            if (window.scrollY > heroHeight) {
+            if (window.scrollY > hero.offsetHeight) {
                 navbar.classList.add('solid');
                 navbar.classList.remove('transparent');
             } else {
@@ -100,7 +132,7 @@
             }
         });
 
-        // Notifications SignalR client (lazy inject script)
+        // Notifications SignalR client
         (function(){
             const badge = document.getElementById('notifBadge');
             if (!badge) return;
@@ -121,9 +153,11 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
-    @if (SignInManager.IsSignedIn(User))
+    
+    @if (SignInManager.IsSignedIn(User) && !(ViewData["HideAIWidget"] as bool? ?? false))
     {
         <partial name="_AskAIWidget" />
     }
+
 </body>
 </html>

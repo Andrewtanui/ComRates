@@ -4,18 +4,29 @@
     ViewData["Title"] = "Conversation";
 }
 
-<div class="container my-5" data-threadkey="@TanuiApp.Controllers.MessagesController.BuildThreadKey(User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!, (string)ViewBag.WithUserId, (int?)ViewBag.ProductId)">
-    <h2 class="fw-bold mb-4">Conversation</h2>
+<div class="container my-3" data-threadkey="@TanuiApp.Controllers.MessagesController.BuildThreadKey(
+                                User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value!,
+                                (string)ViewBag.WithUserId,
+                                (int?)ViewBag.ProductId)">
+
+    <!-- Back button only on mobile -->
+    <div class="d-flex align-items-center mb-3 d-md-none">
+        <a href="@Url.Action("Chat", "Messages")" class="btn btn-link text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h5 class="fw-bold ms-2 mb-0">Conversation</h5>
+    </div>
 
     <div class="card mb-3">
-        <div id="messageList" class="card-body" style="max-height: 50vh; overflow-y: auto;">
+        <div id="messageList" class="card-body" style="max-height: 70vh; overflow-y: auto;">
             @foreach (var m in Model)
             {
-                var isMine = m.SenderId == User.FindFirst("sub")?.Value || m.SenderId == User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+                var isMine = m.SenderId == User.FindFirst("sub")?.Value
+                || m.SenderId == User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
                 <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
                     <div class="p-2 rounded @(isMine ? "bg-success text-white" : "bg-light border")" style="max-width:70%">
                         <div>@m.Content</div>
-                        <small class="text-muted">@m.CreatedAt</small>
+                        <small class="text-muted">@m.CreatedAt.ToShortTimeString()</small>
                     </div>
                 </div>
             }
@@ -45,7 +56,6 @@
             .build();
 
         connection.on('ReceiveMessage', (msg) => {
-            // append bubble
             const wrapper = document.createElement('div');
             wrapper.className = 'd-flex mb-2 justify-content-start';
             const bubble = document.createElement('div');
@@ -62,9 +72,9 @@
         }).catch(console.error);
 
         function escapeHtml(str) {
-            return str.replace(/[&<>"] /g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',' ':"&nbsp;"}[c]));
+            return str.replace(/[&<>"]/g, (c) => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
+            }[c]));
         }
     </script>
 }
-
-
