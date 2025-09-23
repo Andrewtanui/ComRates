@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // ✅ Add this using statement
+using Microsoft.EntityFrameworkCore; 
 using TanuiApp.Data;
 using TanuiApp.Models;
 
@@ -127,9 +127,7 @@ namespace TanuiApp.Controllers
         public async Task<IActionResult> MpesaPay(string phone, decimal amount)
 
         {
-            // TODO: Integrate with Mpesa Daraja API
-            // Example: Send payment request, handle response
-            // For now, simulate success and process transaction
+           
             var user = await _userManager.GetUserAsync(User);
             var cartItems = _context.CartItems.Include(c => c.Product).Where(c => c.UserId == user.Id).ToList();
 
@@ -139,8 +137,7 @@ namespace TanuiApp.Controllers
                 return RedirectToAction("MyCart");
             }
 
-            // Simulate order creation
-            // Create a new Order for the user
+            
             var order = new Order
             {
                 UserId = user.Id,
@@ -152,7 +149,7 @@ namespace TanuiApp.Controllers
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            // Add ordered items to OrderItems table (pseudo-code)
+            // Add ordered items to OrderItems table 
             foreach (var item in cartItems)
             {
                 // Reduce inventory

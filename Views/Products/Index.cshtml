@@ -26,15 +26,16 @@
         </div>
     </form>
 
-    <!-- 🔥 On Sale Section -->
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">🔥 On Sale Now</h2>
-        <p class="text-muted">Grab these deals before the timer runs out!</p>
-    </div>
+    @if (Model.Any(p => p.OnSale))
+    {
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">🔥 On Sale Now</h2>
+            <p class="text-muted">Grab these deals before the timer runs out!</p>
+        </div>
 
-    <div class="row g-4 mb-5">
-        @foreach (var product in Model.Where(p => p.OnSale))
-        {
+        <div class="row g-4 mb-5">
+            @foreach (var product in Model.Where(p => p.OnSale))
+            {
             <div class="col-md-3">
                 <!-- ✅ Make entire card clickable -->
                 <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
@@ -45,9 +46,9 @@
                                 @Html.Raw(HighlightText(product.Name, searchQuery))
                             </h5>
                             <p class="text-danger fw-bold">
-                                $@product.Price
+                                KSh. @product.Price.ToString("N0")
                                 <span class="text-muted text-decoration-line-through">
-                                    $@Math.Round(product.Price * 1.5M, 2)
+                                    KSh. @Math.Round(product.Price * 1.5M, 0).ToString("N0")
                                 </span>
                             </p>
                             <div class="mb-2">
@@ -61,17 +62,19 @@
                                 }
                             </div>
                             <div class="mt-auto d-flex gap-2">
-                                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="d-inline">
+                                <form asp-controller="Products" asp-action="AddToCart" method="post" class="d-inline">
                                     <input type="hidden" name="productId" value="@product.Id" />
                                     <button type="submit" class="btn btn-success w-100">
                                         <i class="bi bi-cart-plus"></i> Add to cart
                                     </button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                                 <form asp-controller="Wishlist" asp-action="AddToWishlist" method="post" class="d-inline">
                                     <input type="hidden" name="productId" value="@product.Id" />
                                     <button type="submit" class="btn btn-outline-danger" title="Add to wishlist">
                                         <i class="bi bi-heart"></i>
                                     </button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                             </div>
                         </div>
@@ -79,9 +82,8 @@
                 </a>
             </div>
         }
-    </div>
-
-    <!-- 🌟 Featured Products Section -->
+        </div>
+    }
     <div class="text-center mb-5">
         <h2 class="fw-bold">🌟 Featured Products</h2>
         <p class="text-muted">Our top picks for you</p>
@@ -99,7 +101,7 @@
                             <h5 class="card-title">
                                 @Html.Raw(HighlightText(product.Name, searchQuery))
                             </h5>
-                            <p class="fw-bold">$@product.Price</p>
+                            <p class="fw-bold text-success">KSh. @product.Price.ToString("N0")</p>
                             <div class="mb-2">
                                 @for (int i = 0; i < (int)Math.Round(product.Rating); i++)
                                 {
@@ -116,12 +118,14 @@
                                     <button type="submit" class="btn btn-success w-100">
                                         <i class="bi bi-cart-plus"></i> Add to cart
                                     </button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                                 <form asp-controller="Wishlist" asp-action="AddToWishlist" method="post" class="d-inline">
                                     <input type="hidden" name="productId" value="@product.Id" />
                                     <button type="submit" class="btn btn-outline-danger" title="Add to wishlist">
                                         <i class="bi bi-heart"></i>
                                     </button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                             </div>
                         </div>

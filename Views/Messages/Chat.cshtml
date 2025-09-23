@@ -94,7 +94,6 @@
                             </div>
                         </div>
                     }
-                    <div id="newMessageNotice" onclick="scrollToBottom()">New messages ↓</div>
                 </div>
 
                 <!-- Sticky Input -->
@@ -128,15 +127,13 @@
         const container = document.querySelector('[data-threadkey]');
         const threadKey = container?.getAttribute('data-threadkey');
         const list = document.getElementById('messageList');
-        const notice = document.getElementById('newMessageNotice');
-
-        function isAtBottom() {
-            return list.scrollHeight - list.scrollTop - list.clientHeight < 50;
-        }
 
         function scrollToBottom() {
-            list.scrollTop = list.scrollHeight;
-            notice.style.display = "none";
+            if (list) {
+                requestAnimationFrame(() => {
+                    list.scrollTop = list.scrollHeight;
+                });
+            }
         }
 
         if (threadKey && list) {
@@ -155,21 +152,22 @@
                     </div>`;
                 list.appendChild(wrapper);
 
-                if (isAtBottom()) {
-                    scrollToBottom();
-                } else {
-                    notice.style.display = "block";
-                }
+                // Always scroll to bottom for new messages
+                scrollToBottom();
             });
 
             connection.start()
                 .then(() => connection.invoke('JoinThread', threadKey))
                 .catch(console.error);
 
-            scrollToBottom();
+            // Auto-scroll once everything is rendered
+            window.addEventListener("load", () => {
+                setTimeout(scrollToBottom, 200);
+            });
 
-            list.addEventListener("scroll", () => {
-                if (isAtBottom()) notice.style.display = "none";
+            // Auto-scroll when sending a message
+            document.getElementById("sendForm")?.addEventListener("submit", () => {
+                setTimeout(scrollToBottom, 100);
             });
         }
 
@@ -216,7 +214,7 @@
     }
 
         .chat-bubble.mine {
-            background: #8fb6ff; /* WhatsApp green bubble */
+            background: #8fb6ff;
             align-self: flex-end;
         }
 
@@ -231,19 +229,5 @@
         text-align: right;
         margin-top: 2px;
         color: gray;
-    }
-
-    #newMessageNotice {
-        position: absolute;
-        bottom: 70px;
-        right: 10px;
-        background: #25d366;
-        color: #fff;
-        padding: 6px 12px;
-        border-radius: 20px;
-        cursor: pointer;
-        display: none;
-        font-size: 0.85rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 </style>

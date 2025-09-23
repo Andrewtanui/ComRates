@@ -5,24 +5,35 @@
         <h2 class="fw-bold">My Wishlist</h2>
         <div>
             <a asp-controller="Products" asp-action="Index" class="btn btn-outline-secondary me-2">Continue Shopping</a>
-            <a href="@Url.Action("MyCart", "Cart")" class="btn btn-primary">View Cart</a>
+            <a href="@Url.Action("Index", "Cart")" class="btn btn-primary">View Cart</a>
         </div>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
 
     @if (!Model.Any())
     {
-        <div class="text-center p-4">
+        <div class="text-center p-5">
             <img src="/images/empty-wishlist-illustration-svg.png" alt="Empty wishlist" style="max-width:360px;width:70%;height:auto" />
+            <div class="mt-4">
+                <h4 class="text-muted">Your wishlist is empty</h4>
+                <p class="text-muted">Start adding items you love to keep track of them!</p>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Browse Products</a>
+            </div>
         </div>
     }
     else
@@ -35,29 +46,89 @@
                         <a asp-controller="Products" asp-action="Details" asp-route-id="@(item.Product?.Id ?? 0)" class="text-decoration-none text-dark">
                             <img src="@(string.IsNullOrEmpty(item.Product?.ImageUrl) ? "/images/placeholder-product.svg" : item.Product.ImageUrl)" class="card-img-top" alt="@(item.Product?.Name ?? "product")" onerror="this.onerror=null;this.src='/images/placeholder-product.svg'" />
                         </a>
-                        <div class="card-body">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title">@(item.Product?.Name ?? "[Product removed]")</h5>
-                            <p class="card-text text-muted">@(item.Product?.Description?.Split('.')[0] ?? "")</p>
-                            <p class="card-text"><strong>Price: @(item.Product != null ? item.Product.Price.ToString("C") : "-")</strong></p>
+                            <p class="card-text text-muted flex-grow-1">@(item.Product?.Description?.Split('.')[0] ?? "")</p>
+                            
+                            @if (item.Product != null)
+                            {
+                                @if (item.Product.OnSale)
+                                {
+                                    <p class="card-text">
+                                        <span class="badge bg-danger mb-2">ON SALE</span><br>
+                                        <strong class="text-success fs-5">KSh. @item.Product.Price.ToString("N0")</strong>
+                                        <small class="text-muted text-decoration-line-through">
+                                            KSh. @Math.Round(item.Product.Price * 1.5M, 0).ToString("N0")
+                                        </small>
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="card-text"><strong class="text-success">KSh. @item.Product.Price.ToString("N0")</strong></p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="card-text"><strong>-</strong></p>
+                            }
+                            
                             <p class="card-text"><small class="text-muted">Added: @item.DateAdded.ToString("MMM dd, yyyy")</small></p>
                         </div>
-                        <div class="card-footer">
-                            <div class="btn-group w-100" role="group">
-                                <form method="post" action="@Url.Action("MoveToCart")" class="d-inline">
+                        <div class="card-footer bg-transparent">
+                            <div class="d-grid gap-2">
+                                <form method="post" action="@Url.Action("MoveToCart")" class="d-grid">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="wishlistItemId" value="@item.Id" />
-                                    <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-cart-plus"></i> Add to Cart
+                                    </button>
                                 </form>
-                                <form method="post" action="@Url.Action("RemoveFromWishlist")" class="d-inline">
+                                <form method="post" action="@Url.Action("RemoveFromWishlist")" class="d-grid">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="wishlistItemId" value="@item.Id" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove this item from your wishlist?')"><i class="fas fa-trash"></i> Remove</button>
+                                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Remove this item from your wishlist?')">
+                                        <i class="bi bi-heart-break"></i> Remove from Wishlist
+                                    </button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
             }
+        </div>
+        
+        <div class="mt-5 text-center">
+            <div class="card p-4 bg-light">
+                <h5 class="mb-3">Wishlist Summary</h5>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Total Items</h6>
+                        <h4 class="text-primary">@Model.Count()</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Total Value</h6>
+                        <h4 class="text-success">KSh. @Model.Where(i => i.Product != null).Sum(i => i.Product.Price).ToString("N0")</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">On Sale Items</h6>
+                        <h4 class="text-danger">@Model.Count(i => i.Product != null && i.Product.OnSale)</h4>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <form method="post" action="@Url.Action("MoveAllToCart")" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-lg me-2" onclick="return confirm('Add all wishlist items to your cart?')">
+                            <i class="bi bi-cart-plus"></i> Add All to Cart
+                        </button>
+                    </form>
+                    <form method="post" action="@Url.Action("ClearWishlist")" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-lg" onclick="return confirm('Clear your entire wishlist? This action cannot be undone.')">
+                            <i class="bi bi-trash"></i> Clear Wishlist
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     }
 </div>

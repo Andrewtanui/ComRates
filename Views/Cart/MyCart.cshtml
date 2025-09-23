@@ -31,20 +31,22 @@
                             <div class="card-body">
                                 <h5 class="card-title">@(item.Product?.Name ?? "[Product removed]")</h5>
                                 <p class="text-muted">@(item.Product?.Description?.Split('.')[0] ?? "")</p>
-                                <p class="fw-bold mb-2">@(item.Product != null ? item.Product.Price.ToString("C") : "-")</p>
+                                <p class="fw-bold mb-2 text-success">@(item.Product != null ? "KSh. " + item.Product.Price.ToString("N0") : "-")</p>
 
                                 <form asp-action="UpdateQuantity" method="post" class="d-flex qty-controls align-items-center">
                                     <input type="hidden" name="productId" value="@(item.Product?.Id ?? 0)" />
                                     <button type="submit" name="action" value="decrease" class="btn btn-sm btn-outline-secondary">-</button>
                                     <input type="text" name="quantity" value="@item.Quantity" class="form-control form-control-sm mx-2" readonly style="width:56px;text-align:center;" />
                                     <button type="submit" name="action" value="increase" class="btn btn-sm btn-outline-secondary">+</button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                             </div>
                             <div class="card-footer d-flex justify-content-between align-items-center">
-                                <div class="text-muted">Total: <strong>@(item.Product != null ? (item.Product.Price * item.Quantity).ToString("C") : "-")</strong></div>
+                                <div class="text-muted">Total: <strong>@(item.Product != null ? "KSh. " + (item.Product.Price * item.Quantity).ToString("N0") : "-")</strong></div>
                                 <form asp-action="RemoveItem" method="post">
                                     <input type="hidden" name="productId" value="@(item.Product?.Id ?? 0)" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    @Html.AntiForgeryToken()
                                 </form>
                             </div>
                         </div>
@@ -57,10 +59,10 @@
             <div class="card p-3" style="min-width:260px;">
                 <h6 class="mb-3">Order Summary</h6>
                 <div class="d-flex justify-content-between"><span>Items</span><span>@Model.Sum(i => i.Quantity)</span></div>
-                <div class="d-flex justify-content-between"><span>Subtotal</span><span>@Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("C")</span></div>
+                <div class="d-flex justify-content-between"><span>Subtotal</span><span>KSh. @Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("N0")</span></div>
                 <div class="d-flex justify-content-between"><span>Shipping</span><span>Calculated at checkout</span></div>
                 <hr />
-                <div class="d-flex justify-content-between fw-bold"><span>Total</span><span>@Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("C")</span></div>
+                <div class="d-flex justify-content-between fw-bold"><span>Total</span><span class="text-success">KSh. @Model.Sum(i => (i.Product != null ? i.Product.Price * i.Quantity : 0)).ToString("N0")</span></div>
             </div>
         </div>
     }

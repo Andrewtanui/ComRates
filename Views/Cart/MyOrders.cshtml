@@ -1,57 +1,99 @@
 @model IEnumerable<TanuiApp.Models.Order>
 @{
-  ViewData["Title"] = "My Orders";
+    ViewData["Title"] = "My Orders";
 }
-<div class="shop-container">
-  <h2 class="mb-4">My Orders</h2>
+<div class="shop-container container py-4">
+    <h2 class="mb-4 fw-bold">My Orders</h2>
 
-  @if (!Model.Any())
-  {
-    <div class="text-center p-4">
-      <img src="/images/empty-cart.svg" alt="No orders" style="max-width:360px;width:70%;height:auto" />
-    </div>
-  }
-  }
-  else
-  {
-    <div class="row g-4">
-      @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
-      {
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <h6 class="mb-1">Order placed: @order.OrderDate.ToString("MMM dd, yyyy h:mm tt")</h6>
-                  <div class="text-muted">Payment: @order.PaymentMethod</div>
-                </div>
-                <div class="text-end">
-                  <div class="mb-1 fw-bold">@order.TotalAmount.ToString("C")</div>
-                  <div>
-                    <span class="badge-status @(order.Status?.ToLower() == "completed" ? "completed" : (order.Status?.ToLower() == "cancelled" ? "cancelled" : "pending"))">@order.Status</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <ul class="list-unstyled mb-0">
-                  @foreach (var item in order.Items)
-                  {
-                    <li class="d-flex align-items-center mb-2">
-                      <img src="@(item.Product?.ImageUrl ?? "/images/placeholder-product.svg")" onerror="this.onerror=null;this.src='/images/placeholder-product.svg'" style="width:64px;height:64px;object-fit:cover;border-radius:8px" alt="@(item.Product?.Name ?? "product")" />
-                      <div class="ms-3">
-                        <div>@(item.Product != null ? item.Product.Name : "[Deleted Product]")</div>
-                        <small class="text-muted">x@item.Quantity • @(item.Price.ToString("C"))</small>
-                      </div>
-                      <div class="ms-auto text-muted">@(item.Price * item.Quantity).ToString("C")</div>
-                    </li>
-                  }
-                </ul>
-              </div>
-            </div>
-          </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center p-4">
+            <img src="/images/empty-cart.svg" alt="No orders" style="max-width:300px;width:70%;height:auto" />
+            <h5 class="mt-3 text-muted">You don’t have any orders yet.</h5>
         </div>
-      }
-    </div>
-  }
+    }
+    else
+    {
+        <div class="order-timeline">
+            @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+            {
+                <div class="order-card mb-4 p-4 shadow-sm rounded-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <div>
+                            <h6 class="fw-bold mb-1">Order #@order.Id</h6>
+                            <small class="text-muted">Placed on @order.OrderDate.ToString("MMM dd, yyyy • h:mm tt")</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold h5 mb-0">@order.TotalAmount.ToString("C")</span>
+                            <div class="mt-1">
+                                <span class="badge rounded-pill px-3 py-2 
+                                    @(order.Status?.ToLower() == "completed" ? "bg-success" :
+                                      order.Status?.ToLower() == "cancelled" ? "bg-danger" : "bg-warning text-dark")">
+                                    <i class="bi @(order.Status?.ToLower() == "completed" ? "bi-check-circle" :
+                                                 order.Status?.ToLower() == "cancelled" ? "bi-x-circle" : "bi-hourglass-split") me-1"></i>
+                                    @order.Status
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in order.Items)
+                        {
+                            <li class="list-group-item d-flex align-items-center">
+                                <img src="@(item.Product?.ImageUrl ?? "/images/placeholder-product.svg")"
+                                     onerror="this.onerror=null;this.src='/images/placeholder-product.svg'"
+                                     class="rounded me-3"
+                                     style="width:64px;height:64px;object-fit:cover;" />
+
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@((item.Product != null ? item.Product.Name : "[Deleted Product]"))</div>
+                                    <small class="text-muted">@((item.Price * item.Quantity).ToString("C"))</small>
+                                </div>
+
+                                <div class="fw-bold">@((item.Price * item.Quantity).ToString("C"))</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    }
 </div>
+
+<style>
+    .order-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    }
+    .order-timeline {
+        position: relative;
+    }
+    .order-timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 18px;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+    .order-card {
+        position: relative;
+        margin-left: 40px;
+    }
+    .order-card::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: -28px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border: 3px solid #0d6efd;
+        border-radius: 50%;
+    }
+</style>
