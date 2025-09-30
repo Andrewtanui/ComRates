@@ -24,7 +24,7 @@
                             <small class="text-muted">Placed on @order.OrderDate.ToString("MMM dd, yyyy • h:mm tt")</small>
                         </div>
                         <div class="text-end">
-                            <span class="fw-bold h5 mb-0">@order.TotalAmount.ToString("C")</span>
+                            <span class="fw-bold h5 mb-0">@("Ksh. "+order.TotalAmount.ToString("N0"))</span>
                             <div class="mt-1">
                                 <span class="badge rounded-pill px-3 py-2 
                                     @(order.Status?.ToLower() == "completed" ? "bg-success" :
@@ -48,10 +48,10 @@
 
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold">@((item.Product != null ? item.Product.Name : "[Deleted Product]"))</div>
-                                    <small class="text-muted">@((item.Price * item.Quantity).ToString("C"))</small>
+                                    <small class="text-muted">@("KSh. "+(item.Price).ToString("N0")) x @((item.Quantity))</small>
                                 </div>
 
-                                <div class="fw-bold">@((item.Price * item.Quantity).ToString("C"))</div>
+                                <div class="fw-bold">@("KSh. "+(item.Price * item.Quantity).ToString("N0"))</div>
                             </li>
                         }
                     </ul>

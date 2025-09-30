@@ -1,0 +1,178 @@
+@{
+    ViewData["Title"] = "About Us";
+}
+
+<!-- Background Video -->
+<div class="video-background">
+    <video id="media" autoplay muted loop>
+        <source src="/videos/bg.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+
+<div class="container my-5 text-white">
+    <!-- About content -->
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-success">About ComRates</h1>
+        <p class="lead">
+            Your trusted campus marketplace for buying, selling, and trading with fellow students.
+        </p>
+    </div>
+
+    <!-- Mission & Story -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <img src="/images/about-hero.svg" alt="About ComRates" class="img-fluid rounded shadow-sm bg-white" />
+        </div>
+        <div class="col-md-6">
+            <h3 class="fw-bold text-success">Our Mission</h3>
+            <p>
+                We started ComRates to solve a common problem: students struggle to find affordable
+                textbooks, electronics, and essentials within campus. Our platform makes it easy
+                to connect students who want to buy, sell, or trade items securely and conveniently.
+            </p>
+            <p>
+                Whether you're decluttering your dorm or searching for a budget-friendly laptop,
+                ComRates is built to help you save money, earn cash, and support your campus community.
+            </p>
+        </div>
+    </div>
+
+    <!-- Meet the Team Carousel Section -->
+    <div class="team-carousel-section text-center mb-5">
+        <h3 class="fw-bold text-success mb-4">Meet The Team</h3>
+
+        <div class="carousel-container position-relative mx-auto" style="max-width: 1200px; height: 450px;">
+            <button class="nav-arrow left btn btn-light position-absolute" style="top:50%; left:20px; z-index:20;">‹</button>
+            <div class="carousel-track d-flex align-items-center justify-content-center position-relative h-100">
+                <!-- Cards -->
+                <div class="card member-card" data-index="0">
+                    <img src="/images/team1.jpg" alt="Team Member 1" class="card-img-top" />
+                </div>
+                <div class="card member-card" data-index="1">
+                    <img src="/images/team2.jpg" alt="Team Member 2" class="card-img-top" />
+                </div>
+                <div class="card member-card" data-index="2">
+                    <img src="/images/team3.jpg" alt="Team Member 3" class="card-img-top" />
+                </div>
+                <div class="card member-card" data-index="3">
+                    <img src="/images/team4.jpg" alt="Team Member 4" class="card-img-top" />
+                </div>
+                <div class="card member-card" data-index="4">
+                    <img src="/images/team5.jpg" alt="Team Member 5" class="card-img-top" />
+                </div>
+                <div class="card member-card" data-index="5">
+                    <img src="/images/team6.jpg" alt="Team Member 6" class="card-img-top" />
+                </div>
+            </div>
+            <button class="nav-arrow right btn btn-light position-absolute" style="top:50%; right:20px; z-index:20;">›</button>
+        </div>
+
+        <div class="member-info mt-4">
+            <h4 class="member-name">Emily Kim</h4>
+            <p class="member-role">Founder</p>
+        </div>
+
+        <div class="dots d-flex justify-content-center gap-2 mt-3">
+            <div class="dot active" data-index="0"></div>
+            <div class="dot" data-index="1"></div>
+            <div class="dot" data-index="2"></div>
+            <div class="dot" data-index="3"></div>
+            <div class="dot" data-index="4"></div>
+            <div class="dot" data-index="5"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // background video
+            const media = document.getElementById("media");
+            media.play();
+
+            // Team carousel
+            const teamMembers = [
+                { name: "Emily Kim", role: "Founder" },
+                { name: "Michael Steward", role: "Creative Director" },
+                { name: "Emma Rodriguez", role: "Lead Developer" },
+                { name: "Julia Gimmel", role: "UX Designer" },
+                { name: "Lisa Anderson", role: "Marketing Manager" },
+                { name: "James Wilson", role: "Product Manager" }
+            ];
+
+            const cards = document.querySelectorAll(".member-card");
+            const dots = document.querySelectorAll(".dot");
+            const memberName = document.querySelector(".member-name");
+            const memberRole = document.querySelector(".member-role");
+            const leftArrow = document.querySelector(".nav-arrow.left");
+            const rightArrow = document.querySelector(".nav-arrow.right");
+
+            let currentIndex = 0;
+            let isAnimating = false;
+
+            function updateCarousel(newIndex) {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                currentIndex = (newIndex + cards.length) % cards.length;
+
+                cards.forEach((card, i) => {
+                    const offset = (i - currentIndex + cards.length) % cards.length;
+                    card.classList.remove("center", "left-1", "left-2", "right-1", "right-2", "hidden");
+                    if (offset === 0) {
+                        card.classList.add("center");
+                    } else if (offset === 1) {
+                        card.classList.add("right-1");
+                    } else if (offset === 2) {
+                        card.classList.add("right-2");
+                    } else if (offset === cards.length - 1) {
+                        card.classList.add("left-1");
+                    } else if (offset === cards.length - 2) {
+                        card.classList.add("left-2");
+                    } else {
+                        card.classList.add("hidden");
+                    }
+                });
+
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle("active", i === currentIndex);
+                });
+
+                memberName.style.opacity = "0";
+                memberRole.style.opacity = "0";
+
+                setTimeout(() => {
+                    memberName.textContent = teamMembers[currentIndex].name;
+                    memberRole.textContent = teamMembers[currentIndex].role;
+                    memberName.style.opacity = "1";
+                    memberRole.style.opacity = "1";
+                }, 300);
+
+                setTimeout(() => {
+                    isAnimating = false;
+                }, 800);
+            }
+
+            leftArrow.addEventListener("click", () => updateCarousel(currentIndex - 1));
+            rightArrow.addEventListener("click", () => updateCarousel(currentIndex + 1));
+            dots.forEach((dot, i) => dot.addEventListener("click", () => updateCarousel(i)));
+            cards.forEach((card, i) => card.addEventListener("click", () => updateCarousel(i)));
+
+            // Swipe support
+            let touchStartX = 0, touchEndX = 0;
+            document.addEventListener("touchstart", (e) => touchStartX = e.changedTouches[0].screenX);
+            document.addEventListener("touchend", (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchStartX - touchEndX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) updateCarousel(currentIndex + 1);
+                    else updateCarousel(currentIndex - 1);
+                }
+            });
+
+            // Initialize
+            updateCarousel(0);
+        });
+    </script>
+}
