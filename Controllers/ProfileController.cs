@@ -38,10 +38,10 @@ namespace TanuiApp.Controllers
                 PhoneNumber = user.PhoneNumber,
                 DateOfBirth = user.DateOfBirth,
                 Address = user.Address,
-                City = user.City,
-                State = user.State,
+                Estate = user.Estate,
+                Town = user.Town,
+                County = user.County,
                 PostalCode = user.PostalCode,
-                Country = user.Country,
                 Bio = user.Bio,
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 EmailNotifications = user.EmailNotifications,
@@ -73,10 +73,10 @@ namespace TanuiApp.Controllers
             user.PhoneNumber = model.PhoneNumber;
             user.DateOfBirth = model.DateOfBirth;
             user.Address = model.Address;
-            user.City = model.City;
-            user.State = model.State;
+            user.Estate = model.Estate;
+            user.Town = model.Town;
+            user.County = model.County;
             user.PostalCode = model.PostalCode;
-            user.Country = model.Country;
             user.Bio = model.Bio;
             user.ProfilePictureUrl = model.ProfilePictureUrl;
             user.EmailNotifications = model.EmailNotifications;
@@ -125,15 +125,26 @@ namespace TanuiApp.Controllers
         }
 
         // Update password page (different from reset password)
-        public IActionResult UpdatePassword()
+        public async Task<IActionResult> UpdatePassword()
         {
-            return View();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new ChangePasswordViewModel
+            {
+                Email = user.Email
+            };
+
+            return View(model);
         }
 
         // Update password
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePassword(UpdatePasswordViewModel model)
+        public async Task<IActionResult> UpdatePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {

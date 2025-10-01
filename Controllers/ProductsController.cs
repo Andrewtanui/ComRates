@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -170,14 +170,14 @@ namespace TanuiApp.Controllers
             return Json(new { success = true, reviewId = review.Id });
         }
 
-        [Authorize]
+        [Authorize(Roles = "Seller")]
         public IActionResult Create()
         {
             return View(new ProductCreateViewModel());
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Seller")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductCreateViewModel vm)
         {
@@ -233,7 +233,7 @@ namespace TanuiApp.Controllers
             return View(vm);
         }
 
-            [Authorize]
+            [Authorize(Roles = "Seller")]
             public async Task<IActionResult> Edit(int id)
             {
                 var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
@@ -256,7 +256,7 @@ namespace TanuiApp.Controllers
             }
 
             [HttpPost]
-            [Authorize]
+            [Authorize(Roles = "Seller")]
             [ValidateAntiForgeryToken]
             public async Task<IActionResult> Edit(int id, ProductCreateViewModel vm)
             {
@@ -300,7 +300,7 @@ namespace TanuiApp.Controllers
             }
 
             [HttpPost]
-            [Authorize]
+            [Authorize(Roles = "Seller")]
             [ValidateAntiForgeryToken]
             public async Task<IActionResult> Delete(int id)
             {

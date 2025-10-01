@@ -1,4 +1,4 @@
-﻿// Program.cs - Corrected version
+// Program.cs - Corrected version
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TanuiApp.Data;
@@ -149,6 +149,23 @@ try
     // Authentication middleware MUST come before authorization
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Configure authorization policies for different user roles
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+        // Ensure all required roles exist
+        string[] roleNames = { "Buyer", "Seller", "DeliveryService", "SystemAdmin" };
+        foreach (var roleName in roleNames)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+            }
+        }
+    }
 
     // Map routes
     app.MapControllerRoute(

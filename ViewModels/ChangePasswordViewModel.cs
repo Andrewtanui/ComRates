@@ -8,6 +8,10 @@ namespace TanuiApp.ViewModels
         [EmailAddress]
         public string Email { get; set; }
 
+        [Required(ErrorMessage = "Current Password is Required")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Current Password")]
+        public string CurrentPassword { get; set; }
 
         [Required(ErrorMessage = "New Password is Required")]
         [StringLength(40, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 8)]
@@ -15,7 +19,6 @@ namespace TanuiApp.ViewModels
         [Display(Name = "New Password")]
         [Compare("ConfirmNewPassword", ErrorMessage = "The password and confirmation password do not match.")]
         public string NewPassword { get; set; }
-
 
         [Required(ErrorMessage = "Confirm New Password is Required")]
         [DataType(DataType.Password)]

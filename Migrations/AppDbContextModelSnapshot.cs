@@ -464,14 +464,14 @@ namespace TanuiApp.Migrations
                     b.Property<string>("Bio")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("City")
+                    b.Property<string>("CompanyName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Country")
+                    b.Property<string>("County")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -479,6 +479,9 @@ namespace TanuiApp.Migrations
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("DeliveryRating")
+                        .HasColumnType("decimal(3,2)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -490,6 +493,9 @@ namespace TanuiApp.Migrations
                     b.Property<bool>("EmailNotifications")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Estate")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -497,7 +503,13 @@ namespace TanuiApp.Migrations
                     b.Property<bool>("IsPublicProfile")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastLoginAt")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LicenseNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -535,7 +547,7 @@ namespace TanuiApp.Migrations
                     b.Property<bool>("SmsNotifications")
                         .HasColumnType("bit");
 
-                    b.Property<string>("State")
+                    b.Property<string>("Town")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -544,6 +556,12 @@ namespace TanuiApp.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("UserRole")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VehicleInfo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

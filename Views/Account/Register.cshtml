@@ -15,10 +15,10 @@
         <div class="d-flex justify-content-between small text-muted mb-3">
             <span id="stepLbl1" class="fw-semibold">1. Basic</span>
             <span id="stepLbl2">2. Profile</span>
-            <span id="stepLbl3">3. Address</span>
+            <span id="stepLbl3">3. Location</span>
             <span id="stepLbl4">4. Preferences</span>
         </div>
-        <form asp-action="Register" method="post" id="onboardForm">
+        <form asp-action="Register" method="post" id="onboardForm" onsubmit="return window.currentStepIndex === 3;">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="onboard-step" data-step="1">
@@ -45,6 +45,16 @@
                         <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat your password" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="UserRole" class="form-label"></label>
+                    <select asp-for="UserRole" class="form-select">
+                        <option value="Buyer">Buyer - I want to purchase products</option>
+                        <option value="Seller">Seller - I want to sell products</option>
+                        <option value="DeliveryService">Delivery Service - I want to provide delivery services</option>
+                    </select>
+                    <span asp-validation-for="UserRole" class="text-danger"></span>
+                    <div class="form-text">Choose your primary role in the marketplace</div>
                 </div>
                 <div class="d-flex justify-content-end">
                     <button type="button" class="btn btn-success" data-next>Continue</button>
@@ -75,6 +85,29 @@
                     <textarea asp-for="Bio" rows="3" class="form-control" placeholder="What do you like to buy or sell?"></textarea>
                     <span asp-validation-for="Bio" class="text-danger"></span>
                 </div>
+
+                <!-- Delivery Service specific fields -->
+                <div id="deliveryFields" class="mb-3" style="display: none;">
+                    <h6 class="mb-2">Delivery Service Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CompanyName" class="form-label"></label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="Your company name" />
+                            <span asp-validation-for="CompanyName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LicenseNumber" class="form-label"></label>
+                            <input asp-for="LicenseNumber" class="form-control" placeholder="Business license number" />
+                            <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="VehicleInfo" class="form-label"></label>
+                        <input asp-for="VehicleInfo" class="form-control" placeholder="e.g. Toyota Hiace, 5-ton truck" />
+                        <span asp-validation-for="VehicleInfo" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-secondary" data-prev>Back</button>
                     <button type="button" class="btn btn-success" data-next>Continue</button>
@@ -82,17 +115,24 @@
             </div>
 
             <div class="onboard-step d-none" data-step="3">
-                <h5 class="mb-3">Address</h5>
+                <h5 class="mb-3">Location Details</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="Address" class="form-label"></label>
-                        <input asp-for="Address" class="form-control" placeholder="Street and house number" />
+                        <input asp-for="Address" class="form-control" placeholder="e.g. House 123, Kimathi Street" />
                         <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="City" class="form-label"></label>
-                        <select asp-for="City" class="form-select">
-                            <option value="">Select city</option>
+                        <label asp-for="Estate" class="form-label"></label>
+                        <input asp-for="Estate" class="form-control" placeholder="e.g. Kilimani, South B, Westlands" />
+                        <span asp-validation-for="Estate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Town" class="form-label"></label>
+                        <select asp-for="Town" class="form-select">
+                            <option value="">Select town/city</option>
                             <option>Nairobi</option>
                             <option>Mombasa</option>
                             <option>Kisumu</option>
@@ -102,39 +142,80 @@
                             <option>Machakos</option>
                             <option>Nyeri</option>
                             <option>Meru</option>
+                            <option>Kisii</option>
+                            <option>Kakamega</option>
+                            <option>Kitale</option>
+                            <option>Malindi</option>
+                            <option>Garissa</option>
+                            <option>Naivasha</option>
+                            <option>Ruiru</option>
+                            <option>Kiambu</option>
+                            <option>Kitui</option>
+                            <option>Embu</option>
                             <option>Other</option>
                         </select>
-                        <span asp-validation-for="City" class="text-danger"></span>
+                        <span asp-validation-for="Town" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="County" class="form-label"></label>
+                        <select asp-for="County" class="form-select">
+                            <option value="">Select county</option>
+                            <option>Nairobi</option>
+                            <option>Mombasa</option>
+                            <option>Kisumu</option>
+                            <option>Nakuru</option>
+                            <option>Uasin Gishu</option>
+                            <option>Kiambu</option>
+                            <option>Machakos</option>
+                            <option>Nyeri</option>
+                            <option>Meru</option>
+                            <option>Kisii</option>
+                            <option>Kakamega</option>
+                            <option>Trans Nzoia</option>
+                            <option>Kilifi</option>
+                            <option>Garissa</option>
+                            <option>Kajiado</option>
+                            <option>Murang'a</option>
+                            <option>Nyandarua</option>
+                            <option>Kirinyaga</option>
+                            <option>Embu</option>
+                            <option>Kitui</option>
+                            <option>Makueni</option>
+                            <option>Turkana</option>
+                            <option>West Pokot</option>
+                            <option>Samburu</option>
+                            <option>Bungoma</option>
+                            <option>Busia</option>
+                            <option>Siaya</option>
+                            <option>Homa Bay</option>
+                            <option>Migori</option>
+                            <option>Nyamira</option>
+                            <option>Narok</option>
+                            <option>Baringo</option>
+                            <option>Laikipia</option>
+                            <option>Nandi</option>
+                            <option>Elgeyo-Marakwet</option>
+                            <option>Kericho</option>
+                            <option>Bomet</option>
+                            <option>Tharaka-Nithi</option>
+                            <option>Vihiga</option>
+                            <option>Kwale</option>
+                            <option>Taita Taveta</option>
+                            <option>Lamu</option>
+                            <option>Tana River</option>
+                            <option>Wajir</option>
+                            <option>Mandera</option>
+                            <option>Marsabit</option>
+                            <option>Isiolo</option>
+                        </select>
+                        <span asp-validation-for="County" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="State" class="form-label"></label>
-                        <input asp-for="State" class="form-control" placeholder="County/State" />
-                        <span asp-validation-for="State" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="PostalCode" class="form-label"></label>
-                        <input asp-for="PostalCode" class="form-control" placeholder="e.g. 00100" />
-                        <span asp-validation-for="PostalCode" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Country" class="form-label"></label>
-                        <select asp-for="Country" class="form-select">
-                            <option value="">Select country</option>
-                            <option>Kenya</option>
-                            <option>Tanzania</option>
-                            <option>Uganda</option>
-                            <option>Rwanda</option>
-                            <option>Ethiopia</option>
-                            <option>South Sudan</option>
-                            <option>United States</option>
-                            <option>United Kingdom</option>
-                            <option>India</option>
-                            <option>Other</option>
-                        </select>
-                        <span asp-validation-for="Country" class="text-danger"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="PostalCode" class="form-label"></label>
+                    <input asp-for="PostalCode" class="form-control" placeholder="e.g. 00100" />
+                    <span asp-validation-for="PostalCode" class="text-danger"></span>
+                    <div class="form-text">Optional - Enter your postal code if known</div>
                 </div>
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-secondary" data-prev>Back</button>
@@ -172,9 +253,7 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
-    }
+    <partial name="_ValidationScriptsPartial" />
     <script>
         (function(){
             const form = document.getElementById('onboardForm');
@@ -186,70 +265,152 @@
                 document.getElementById('stepLbl3'),
                 document.getElementById('stepLbl4')
             ];
+
             const email = form.querySelector('input[name="Email"]');
             const pwd = form.querySelector('input[name="Password"]');
             const pwd2 = form.querySelector('input[name="ConfirmPassword"]');
             const strengthText = document.getElementById('pwdStrengthText');
             let index = 0;
+            
             function show(i){
-                steps.forEach((s,idx)=> s.classList.toggle('d-none', idx!==i));
+                steps.forEach((s,idx)=> {
+                    if(idx === i) {
+                        s.classList.remove('d-none');
+                    } else {
+                        s.classList.add('d-none');
+                    }
+                });
                 index = i;
+                window.currentStepIndex = i;
+                
                 if(progress){
                     const pct = Math.round(((i+1)/steps.length)*100);
                     progress.style.width = pct + '%';
                     progress.setAttribute('aria-valuenow', String(pct));
                 }
+                
                 lbls.forEach((l,idx)=>{
                     if(!l) return;
                     l.classList.toggle('fw-semibold', idx===i);
                     l.classList.toggle('text-success', idx < i);
                 });
             }
+            
             function validateStep(i){
-                // Simple required validation for visible inputs with required attribute or for known required fields on step 1
                 const container = steps[i];
-                const inputs = Array.from(container.querySelectorAll('input, textarea'));
+                const inputs = Array.from(container.querySelectorAll('input, textarea, select'));
                 let ok = true;
-                for(const el of inputs){
-                    // Focus basic requireds for step 1
-                    if(i===0 && (el.name.endsWith('.Name') || el.name.endsWith('.Email') || el.name.endsWith('.Password') || el.name.endsWith('.ConfirmPassword'))){
-                        if(!el.value || !el.value.trim()){ ok=false; el.classList.add('is-invalid'); }
-                        else el.classList.remove('is-invalid');
+
+                if(i === 0){ // Basic step
+                    for(const el of inputs){
+                        if(el.name.endsWith('.Name') || el.name.endsWith('.Email') || el.name.endsWith('.Password') || el.name.endsWith('.ConfirmPassword') || el.name.endsWith('.UserRole')){
+                            if(!el.value || !el.value.trim()){
+                                ok = false;
+                                el.classList.add('is-invalid');
+                            } else {
+                                el.classList.remove('is-invalid');
+                            }
+                        }
                     }
-                }
-                if(i===0){
                     // Email regex quick check
-                    const emailOk = email && /.+@@.+\..+/.test(email.value);
+                    const emailOk = email && (/.+@@.+\..+/).test(email.value);
                     if(!emailOk){ ok=false; email?.classList.add('is-invalid'); }
                     else email?.classList.remove('is-invalid');
                     // Password strength: min 8, letter+number
                     const p = pwd?.value || '';
-                    const strong = p.length>=8 && /[A-Za-z]/.test(p) && /\d/.test(p);
+                    const strong = p.length>=8 && (/[A-Za-z]/).test(p) && (/\d/).test(p);
                     if(!strong){ ok=false; pwd?.classList.add('is-invalid'); }
                     else pwd?.classList.remove('is-invalid');
                     // Match
                     if((pwd2?.value||'') !== p){ ok=false; pwd2?.classList.add('is-invalid'); }
                     else pwd2?.classList.remove('is-invalid');
                 }
+
+                if(i === 1){ // Profile step - basic validation for required fields
+                    for(const el of inputs){
+                        if(el.name.endsWith('.PhoneNumber') || el.name.endsWith('.DateOfBirth')){
+                            if(el.hasAttribute('required') && (!el.value || !el.value.trim())){
+                                ok = false;
+                                el.classList.add('is-invalid');
+                            } else {
+                                el.classList.remove('is-invalid');
+                            }
+                        }
+                    }
+                }
+
+                if(i === 2){ // Location step - basic validation for required fields
+                    for(const el of inputs){
+                        if(el.name.endsWith('.Address') || el.name.endsWith('.Town') || el.name.endsWith('.County')){
+                            if(el.hasAttribute('required') && (!el.value || !el.value.trim())){
+                                ok = false;
+                                el.classList.add('is-invalid');
+                            } else {
+                                el.classList.remove('is-invalid');
+                            }
+                        }
+                    }
+                }
+
                 return ok;
             }
+            
             function updateStrength(){
                 if(!pwd || !strengthText) return;
                 const p = pwd.value || '';
-                let score = 0; if(p.length>=8) score++; if(/[A-Z]/.test(p)) score++; if(/[a-z]/.test(p)) score++; if(/\d/.test(p)) score++; if(/[^A-Za-z0-9]/.test(p)) score++;
+                let score = 0; 
+                if(p.length>=8) score++; 
+                if(/[A-Z]/.test(p)) score++; 
+                if(/[a-z]/.test(p)) score++; 
+                if(/\d/.test(p)) score++; 
+                if(/[^A-Za-z0-9]/.test(p)) score++;
                 const labels = ['Very weak','Weak','Fair','Good','Strong'];
                 const idx = Math.max(0, Math.min(labels.length-1, score-1));
                 strengthText.textContent = 'Password strength: ' + labels[idx];
             }
+            
+            const userRoleSelect = form.querySelector('select[name="UserRole"]');
+            const deliveryFields = document.getElementById('deliveryFields');
+
+            function toggleDeliveryFields() {
+                if (userRoleSelect && deliveryFields) {
+                    const shouldShow = userRoleSelect.value === 'DeliveryService';
+                    deliveryFields.style.display = shouldShow ? 'block' : 'none';
+                }
+            }
+
+            userRoleSelect?.addEventListener('change', toggleDeliveryFields);
             pwd?.addEventListener('input', updateStrength);
-            updateStrength();
-            document.querySelectorAll('[data-next]').forEach(btn=> btn.addEventListener('click', ()=>{
-                if(!validateStep(index)) return;
-                if(index < steps.length-1) show(index+1);
+            toggleDeliveryFields();
+
+            // Prevent Enter key from submitting form during step navigation
+            form.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && index < steps.length - 1) {
+                    e.preventDefault();
+                    const nextBtn = steps[index].querySelector('[data-next]');
+                    if (nextBtn) nextBtn.click();
+                }
+            });
+
+            document.querySelectorAll('[data-next]').forEach(btn=> btn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                console.log('Continue clicked, current index:', index);
+                if(!validateStep(index)) {
+                    console.log('Validation failed for step:', index);
+                    return;
+                }
+                if(index < steps.length-1) {
+                    console.log('Advancing from step', index, 'to step', index+1);
+                    show(index+1);
+                }
             }));
-            document.querySelectorAll('[data-prev]').forEach(btn=> btn.addEventListener('click', ()=>{
+            
+            document.querySelectorAll('[data-prev]').forEach(btn=> btn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                console.log('Back clicked, current index:', index);
                 if(index > 0) show(index-1);
             }));
+            
             show(0);
         })();
     </script>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; 
@@ -51,83 +51,11 @@ namespace TanuiApp.Controllers
             return RedirectToAction("MyCart");
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RemoveItem(int productId)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var item = _context.CartItems.FirstOrDefault(c => c.UserId == user.Id && c.ProductId == productId);
-            if (item != null)
-            {
-                _context.CartItems.Remove(item);
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToAction("MyCart");
-        }
 
         [HttpPost]
-        public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
-        {
-            var user = await _userManager.GetUserAsync(User);
-
-            var product = _context.Products.Find(productId);
-
-            if (product == null || product.UserId == user.Id)
-            {
-                return BadRequest("Cannot add this product.");
-            }
-
-            var existingItem = _context.CartItems
-                .FirstOrDefault(c => c.UserId == user.Id && c.ProductId == productId);
-
-            int totalRequested = quantity;
-            if (existingItem != null)
-            {
-                totalRequested += existingItem.Quantity;
-            }
-
-            if (totalRequested > product.Quantity)
-            {
-                TempData["Error"] = $"Cannot add {totalRequested} items. Only {product.Quantity} left in stock.";
-                return RedirectToAction("MyCart");
-            }
-
-            if (existingItem != null)
-            {
-                existingItem.Quantity += quantity;
-            }
-            else
-            {
-                _context.CartItems.Add(new CartItem
-                {
-                    UserId = user.Id,
-                    ProductId = productId,
-                    Quantity = quantity
-                });
-            }
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("MyCart");
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Checkout()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var cartItems = _context.CartItems.Include(c => c.Product).Where(c => c.UserId == user.Id).ToList();
-            if (!cartItems.Any())
-            {
-                TempData["Error"] = "Your cart is empty.";
-                return RedirectToAction("MyCart");
-            }
-            // You can pass address/payment info via ViewModel later
-            return View(cartItems);
-        }
-        [HttpPost]
+        [Authorize(Roles = "Buyer")]
         public async Task<IActionResult> MpesaPay(string phone, decimal amount)
-
         {
-           
             var user = await _userManager.GetUserAsync(User);
             var cartItems = _context.CartItems.Include(c => c.Product).Where(c => c.UserId == user.Id).ToList();
 
@@ -193,6 +121,7 @@ namespace TanuiApp.Controllers
         }
         
         [HttpGet]
+        [Authorize(Roles = "Buyer")]
         public async Task<IActionResult> MyOrders()
         {
             var user = await _userManager.GetUserAsync(User);

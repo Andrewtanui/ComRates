@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TanuiApp.Models;
 
@@ -21,7 +21,20 @@ namespace TanuiApp.Data
         {
             base.OnModelCreating(builder);
 
-            
+            // Configure decimal precision for better SQL Server compatibility
+            builder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<OrderItem>()
+                .Property(oi => oi.Price)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<Users>()
+                .Property(u => u.DeliveryRating)
+                .HasColumnType("decimal(3,2)");
+
+
             builder.Entity<CartItem>()
                 .HasOne(c => c.Product)
                 .WithMany()
@@ -34,7 +47,7 @@ namespace TanuiApp.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
+
             builder.Entity<WishlistItem>()
                 .HasOne(w => w.Product)
                 .WithMany()
@@ -47,12 +60,12 @@ namespace TanuiApp.Data
                 .HasForeignKey(w => w.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
+
             builder.Entity<WishlistItem>()
                 .HasIndex(w => new { w.UserId, w.ProductId })
                 .IsUnique();
 
-           
+
             builder.Entity<Message>()
                 .HasIndex(m => m.ThreadKey);
 
