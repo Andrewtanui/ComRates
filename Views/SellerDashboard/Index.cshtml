@@ -1,0 +1,480 @@
+@model TanuiApp.ViewModels.SellerDashboardViewModel
+@{
+    ViewData["Title"] = "Seller Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="bi bi-speedometer2 me-2"></i>Inventory Management Dashboard</h2>
+            <p class="text-muted">Welcome back! Here's your store performance overview.</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Products</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalProducts</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-box-seam text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Revenue</p>
+                            <h3 class="fw-bold mb-0">KSh @Model.TotalRevenue.ToString("N0")</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-currency-dollar text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Orders</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalOrders</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-cart-check text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Avg Order Value</p>
+                            <h3 class="fw-bold mb-0">KSh @Model.AverageOrderValue.ToString("N0")</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-graph-up text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Alerts -->
+    @if (Model.StockAlerts.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Stock Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            @foreach (var alert in Model.StockAlerts.Take(6))
+                            {
+                                <div class="col-md-4">
+                                    <div class="alert @(alert.AlertLevel == "Out" ? "alert-danger" : "alert-warning") mb-0 d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(alert.ImageUrl))
+                                        {
+                                            <img src="@alert.ImageUrl" alt="@alert.ProductName" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        }
+                                        <div class="flex-grow-1">
+                                            <strong>@alert.ProductName</strong>
+                                            <br><small>Stock: @alert.CurrentStock @(alert.AlertLevel == "Out" ? "(Out of Stock)" : "(Low Stock)")</small>
+                                        </div>
+                                        <a asp-controller="Products" asp-action="Edit" asp-route-id="@alert.ProductId" class="btn btn-sm btn-outline-dark">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Charts Row -->
+    <div class="row g-3 mb-4">
+        <!-- Sales by Day Chart -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Sales by Day of Week</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesByDayChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales by Hour Chart -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Sales by Hour of Day</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesByHourChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Performance -->
+    <div class="row g-3 mb-4">
+        <!-- Top Selling Products -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-trophy text-warning me-2"></i>Top Selling Products</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TopSellingProducts.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-end">Units Sold</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model.TopSellingProducts)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                                    {
+                                                        <img src="@product.ImageUrl" alt="@product.ProductName" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    }
+                                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductId" class="text-decoration-none">
+                                                        @product.ProductName
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="text-end"><span class="badge bg-primary">@product.UnitsSold</span></td>
+                                            <td class="text-end fw-bold">KSh @product.Revenue.ToString("N0")</td>
+                                            <td class="text-end">
+                                                <span class="badge @(product.CurrentStock > 10 ? "bg-success" : product.CurrentStock > 0 ? "bg-warning" : "bg-danger")">
+                                                    @product.CurrentStock
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No sales data available yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Performing Products -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-arrow-down-circle text-danger me-2"></i>Low Performing Products</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.LowPerformingProducts.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-end">Units Sold</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model.LowPerformingProducts)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                                    {
+                                                        <img src="@product.ImageUrl" alt="@product.ProductName" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    }
+                                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductId" class="text-decoration-none">
+                                                        @product.ProductName
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="text-end"><span class="badge bg-secondary">@product.UnitsSold</span></td>
+                                            <td class="text-end">KSh @product.Revenue.ToString("N0")</td>
+                                            <td class="text-end">
+                                                <span class="badge @(product.CurrentStock > 10 ? "bg-success" : product.CurrentStock > 0 ? "bg-warning" : "bg-danger")">
+                                                    @product.CurrentStock
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No sales data available yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Recent Orders</h5>
+                    <a asp-controller="Cart" asp-action="MyOrders" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentOrders.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th class="text-end">Items</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td><strong>#@order.OrderId</strong></td>
+                                            <td>@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                            <td>@order.CustomerName</td>
+                                            <td class="text-end">@order.ItemCount</td>
+                                            <td class="text-end fw-bold">KSh @order.TotalAmount.ToString("N0")</td>
+                                            <td>
+                                                <span class="badge @(order.Status == "Completed" ? "bg-success" : order.Status == "Pending" ? "bg-warning" : "bg-info")">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No orders yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a asp-controller="Products" asp-action="Create" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle me-2"></i>Add New Product
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Profile" asp-action="MyListings" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-list-ul me-2"></i>View All Products
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Cart" asp-action="MyOrders" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-receipt me-2"></i>View All Orders
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Profile" asp-action="Settings" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-gear me-2"></i>Store Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Sales by Day Chart
+        const dayCtx = document.getElementById('salesByDayChart');
+        if (dayCtx) {
+            const dayData = @Html.Raw(Json.Serialize(Model.SalesByDay));
+            
+            new Chart(dayCtx, {
+                type: 'bar',
+                data: {
+                    labels: dayData.map(d => d.dayName),
+                    datasets: [{
+                        label: 'Number of Orders',
+                        data: dayData.map(d => d.orderCount),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Best and Worst Sales Days',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Day of Week',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Orders',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sales by Hour Chart
+        const hourCtx = document.getElementById('salesByHourChart');
+        if (hourCtx) {
+            const hourData = @Html.Raw(Json.Serialize(Model.SalesByHour));
+            
+            new Chart(hourCtx, {
+                type: 'line',
+                data: {
+                    labels: hourData.map(d => d.timeRange),
+                    datasets: [{
+                        label: 'Number of Orders',
+                        data: hourData.map(d => d.orderCount),
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Peak Shopping Hours',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time of Day (24-hour format)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Orders',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

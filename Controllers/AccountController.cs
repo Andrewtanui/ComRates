@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TanuiApp.Models;
 using TanuiApp.ViewModels;
@@ -44,6 +44,12 @@ namespace UsersApp.Controllers
                     {
                         var roles = await userManager.GetRolesAsync(user);
                         logger.LogInformation($"User {user.Email} logged in with role: {user.UserRole}, Assigned roles: {string.Join(", ", roles)}");
+                        
+                        // Redirect sellers to their dashboard, buyers to home
+                        if (user.UserRole == UserRole.Seller || user.UserRole == UserRole.SystemAdmin)
+                        {
+                            return RedirectToAction("Index", "SellerDashboard");
+                        }
                     }
                     return RedirectToAction("Index", "Home");
                 }
