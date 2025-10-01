@@ -57,11 +57,17 @@
                                 </div>
                                 <div class="step-label">Packed</div>
                             </div>
-                            <div class="step @(order.DeliveryStatus == "InTransit" || order.DeliveryStatus == "Delivered" ? "completed" : "")">
+                            <div class="step @(order.DeliveryStatus == "InTransit" || order.DeliveryStatus == "Arrived" || order.DeliveryStatus == "Delivered" ? "completed" : "")">
                                 <div class="step-icon">
                                     <i class="bi bi-truck"></i>
                                 </div>
                                 <div class="step-label">In Transit</div>
+                            </div>
+                            <div class="step @(order.DeliveryStatus == "Arrived" || order.DeliveryStatus == "Delivered" ? "completed" : "")">
+                                <div class="step-icon">
+                                    <i class="bi bi-geo"></i>
+                                </div>
+                                <div class="step-label">Arrived</div>
                             </div>
                             <div class="step @(order.DeliveryStatus == "Delivered" ? "completed" : "")">
                                 <div class="step-icon">

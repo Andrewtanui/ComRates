@@ -47,7 +47,8 @@ namespace TanuiApp.Controllers
 
             viewModel.TotalDeliveries = myDeliveries.Count;
             viewModel.PendingDeliveries = myDeliveries.Count(o => o.DeliveryStatus == "Preparing" || o.DeliveryStatus == "Packed");
-            viewModel.InTransitDeliveries = myDeliveries.Count(o => o.DeliveryStatus == "InTransit");
+            // Treat both InTransit and Arrived as active
+            viewModel.InTransitDeliveries = myDeliveries.Count(o => o.DeliveryStatus == "InTransit" || o.DeliveryStatus == "Arrived");
             viewModel.CompletedDeliveries = myDeliveries.Count(o => o.DeliveryStatus == "Delivered");
             viewModel.TotalEarnings = myDeliveries.Sum(o => o.DeliveryFee);
             viewModel.AverageDeliveryFee = viewModel.TotalDeliveries > 0 
@@ -77,9 +78,9 @@ namespace TanuiApp.Controllers
                 })
                 .ToList();
 
-            // Active deliveries (In Transit)
+            // Active deliveries (In Transit or Arrived)
             viewModel.ActiveDeliveries = myDeliveries
-                .Where(o => o.DeliveryStatus == "InTransit")
+                .Where(o => o.DeliveryStatus == "InTransit" || o.DeliveryStatus == "Arrived")
                 .OrderBy(o => o.ShippedAt)
                 .Select(o => new DeliveryOrderInfo
                 {
@@ -188,8 +189,16 @@ namespace TanuiApp.Controllers
                 case "InTransit":
                     order.ShippedAt = DateTime.Now;
                     break;
+                case "Arrived":
+                    // Optional: could record arrival timestamp if added later
+                    break;
                 case "Delivered":
                     order.DeliveredAt = DateTime.Now;
+                    // If Cash on Delivery, mark order as paid upon delivery
+                    if (!string.IsNullOrEmpty(order.PaymentMethod) && order.PaymentMethod.Replace(" ", "").Equals("CashOnDelivery", StringComparison.OrdinalIgnoreCase))
+                    {
+                        order.Status = "Paid";
+                    }
                     break;
             }
 

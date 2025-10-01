@@ -162,7 +162,7 @@
                                                     <h6 class="mb-1">@order.TrackingNumber</h6>
                                                     <p class="mb-0 text-muted small">@order.CustomerName</p>
                                                 </div>
-                                                <span class="badge bg-info">In Transit</span>
+                                                <span class="badge @(order.DeliveryStatus == "Arrived" ? "bg-primary" : "bg-info")">@(order.DeliveryStatus == "Arrived" ? "Arrived" : "In Transit")</span>
                                             </div>
                                             <hr>
                                             <p class="mb-2">
@@ -172,9 +172,17 @@
                                             </p>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <span class="text-success fw-bold">KSh @order.DeliveryFee.ToString("N0")</span>
-                                                <button class="btn btn-sm btn-success update-status" data-order-id="@order.OrderId" data-status="Delivered">
-                                                    <i class="bi bi-check-circle"></i> Mark Delivered
-                                                </button>
+                                                <div class="d-flex gap-2">
+                                                    @if (order.DeliveryStatus == "InTransit")
+                                                    {
+                                                        <button class="btn btn-sm btn-primary update-status" data-order-id="@order.OrderId" data-status="Arrived">
+                                                            <i class="bi bi-geo"></i> Mark Arrived
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-sm btn-success update-status" data-order-id="@order.OrderId" data-status="Delivered">
+                                                        <i class="bi bi-check-circle"></i> Mark Delivered
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
