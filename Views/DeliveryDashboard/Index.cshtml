@@ -1,0 +1,385 @@
+@model TanuiApp.ViewModels.DeliveryDashboardViewModel
+@{
+    ViewData["Title"] = "Delivery Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="bi bi-truck me-2"></i>Delivery Service Dashboard</h2>
+            <p class="text-muted">Manage your deliveries and track your performance</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Deliveries</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalDeliveries</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-box-seam text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Pending</p>
+                            <h3 class="fw-bold mb-0">@Model.PendingDeliveries</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clock-history text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">In Transit</p>
+                            <h3 class="fw-bold mb-0">@Model.InTransitDeliveries</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-truck text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Earnings</p>
+                            <h3 class="fw-bold mb-0">KSh @Model.TotalEarnings.ToString("N0")</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-currency-dollar text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Orders -->
+    @if (Model.PendingOrders.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0"><i class="bi bi-hourglass-split text-warning me-2"></i>Pending Pickups</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tracking #</th>
+                                        <th>Customer</th>
+                                        <th>Delivery Location</th>
+                                        <th>Status</th>
+                                        <th>Fee</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.PendingOrders)
+                                    {
+                                        <tr>
+                                            <td><strong>@order.TrackingNumber</strong></td>
+                                            <td>@order.CustomerName</td>
+                                            <td>
+                                                <i class="bi bi-geo-alt"></i> @order.DeliveryAddress<br>
+                                                <small class="text-muted">@order.DeliveryTown, @order.DeliveryCounty</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(order.DeliveryStatus == "Preparing" ? "bg-secondary" : "bg-info")">
+                                                    @order.DeliveryStatus
+                                                </span>
+                                            </td>
+                                            <td class="fw-bold">KSh @order.DeliveryFee.ToString("N0")</td>
+                                            <td>
+                                                @if (order.DeliveryStatus == "Preparing")
+                                                {
+                                                    <button class="btn btn-sm btn-primary update-status" data-order-id="@order.OrderId" data-status="Packed">
+                                                        <i class="bi bi-check"></i> Mark Packed
+                                                    </button>
+                                                }
+                                                else if (order.DeliveryStatus == "Packed")
+                                                {
+                                                    <button class="btn btn-sm btn-success update-status" data-order-id="@order.OrderId" data-status="InTransit">
+                                                        <i class="bi bi-truck"></i> Start Delivery
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Active Deliveries -->
+    @if (Model.ActiveDeliveries.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0"><i class="bi bi-truck text-info me-2"></i>Active Deliveries</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var order in Model.ActiveDeliveries)
+                            {
+                                <div class="col-md-6">
+                                    <div class="card border-start border-info border-4">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">@order.TrackingNumber</h6>
+                                                    <p class="mb-0 text-muted small">@order.CustomerName</p>
+                                                </div>
+                                                <span class="badge bg-info">In Transit</span>
+                                            </div>
+                                            <hr>
+                                            <p class="mb-2">
+                                                <i class="bi bi-geo-alt text-danger"></i> 
+                                                <strong>@order.DeliveryAddress</strong><br>
+                                                <small class="text-muted ms-3">@order.DeliveryTown, @order.DeliveryCounty</small>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-success fw-bold">KSh @order.DeliveryFee.ToString("N0")</span>
+                                                <button class="btn btn-sm btn-success update-status" data-order-id="@order.OrderId" data-status="Delivered">
+                                                    <i class="bi bi-check-circle"></i> Mark Delivered
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Charts Row -->
+    <div class="row g-3 mb-4">
+        <!-- Deliveries by Day Chart -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Deliveries by Day</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="deliveriesByDayChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frequent Locations -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-pin-map me-2"></i>Frequent Delivery Locations</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.FrequentLocations.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th class="text-end">Deliveries</th>
+                                        <th class="text-end">Earnings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var location in Model.FrequentLocations)
+                                    {
+                                        <tr>
+                                            <td><i class="bi bi-geo-alt text-danger"></i> @location.Location</td>
+                                            <td class="text-end"><span class="badge bg-primary">@location.DeliveryCount</span></td>
+                                            <td class="text-end fw-bold">KSh @location.TotalEarnings.ToString("N0")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No delivery data yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Deliveries -->
+    @if (Model.RecentDeliveries.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>Recent Completed Deliveries</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tracking #</th>
+                                        <th>Customer</th>
+                                        <th>Location</th>
+                                        <th>Delivered</th>
+                                        <th class="text-end">Earned</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.RecentDeliveries)
+                                    {
+                                        <tr>
+                                            <td>@order.TrackingNumber</td>
+                                            <td>@order.CustomerName</td>
+                                            <td>@order.DeliveryTown, @order.DeliveryCounty</td>
+                                            <td>@order.DeliveryDate?.ToString("MMM dd, yyyy")</td>
+                                            <td class="text-end text-success fw-bold">KSh @order.DeliveryFee.ToString("N0")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Deliveries by Day Chart
+        const dayCtx = document.getElementById('deliveriesByDayChart');
+        if (dayCtx) {
+            const dayData = @Html.Raw(Json.Serialize(Model.DeliveriesByDay));
+            
+            new Chart(dayCtx, {
+                type: 'bar',
+                data: {
+                    labels: dayData.map(d => d.dayName),
+                    datasets: [{
+                        label: 'Number of Deliveries',
+                        data: dayData.map(d => d.deliveryCount),
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Busiest Delivery Days',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Day of Week',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Deliveries',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            suggestedMax: Math.max(...dayData.map(d => d.deliveryCount)) + 2
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update delivery status
+        document.querySelectorAll('.update-status').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const orderId = this.getAttribute('data-order-id');
+                const status = this.getAttribute('data-status');
+                
+                if (!confirm(`Mark this delivery as ${status}?`)) return;
+                
+                try {
+                    const response = await fetch('@Url.Action("UpdateDeliveryStatus", "DeliveryDashboard")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `orderId=${orderId}&status=${status}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Failed to update status');
+                    }
+                } catch (error) {
+                    alert('Error updating status');
+                }
+            });
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}

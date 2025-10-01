@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace TanuiApp.Models
 {
@@ -39,5 +39,15 @@ namespace TanuiApp.Models
         public string? VehicleInfo { get; set; }
         public bool IsVerified { get; set; } = false;
         public decimal? DeliveryRating { get; set; }
+
+        // Account moderation fields
+        public bool IsSuspended { get; set; } = false;
+        public bool IsBanned { get; set; } = false;
+        public DateTime? SuspendedAt { get; set; }
+        public DateTime? BannedAt { get; set; }
+        public string? SuspensionReason { get; set; }
+        public string? BanReason { get; set; }
+        public int ReportCount { get; set; } = 0;
+        public DateTime? LastReportedAt { get; set; }
     }
 }

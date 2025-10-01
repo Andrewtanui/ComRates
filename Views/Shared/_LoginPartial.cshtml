@@ -47,10 +47,11 @@
                         <i class="bi bi-person me-2"></i>Profile Settings
                     </a>
                 </li>
-                @{ // Show My Listings only for Sellers and SystemAdmins
+                @{ // Show features based on user role
                     var currentUser = await UserManager.GetUserAsync(User);
                     var isSeller = currentUser?.UserRole == UserRole.Seller || currentUser?.UserRole == UserRole.SystemAdmin;
-                    var isBuyer = currentUser?.UserRole == UserRole.Buyer || currentUser?.UserRole == UserRole.SystemAdmin;
+                    var isBuyer = currentUser?.UserRole == UserRole.Buyer;
+                    var isDeliveryService = currentUser?.UserRole == UserRole.DeliveryService;
                 }
                 @if (isBuyer)
                 {

@@ -195,12 +195,25 @@ namespace TanuiApp.Controllers
                 return RedirectToAction("MyCart");
             }
 
+            // Get all delivery services
+            var deliveryServices = await _context.Users
+                .Where(u => u.UserRole == UserRole.DeliveryService)
+                .ToListAsync();
+            
+            ViewBag.DeliveryServices = deliveryServices;
+
             return View(cartItems);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> PlaceOrder(string paymentMethod, string deliveryAddress)
+        public async Task<IActionResult> PlaceOrder(
+            string paymentMethod, 
+            string deliveryAddress, 
+            string deliveryTown,
+            string deliveryCounty,
+            string deliveryServiceId,
+            decimal deliveryFee)
         {
             var user = await _userManager.GetUserAsync(User);
             var cartItems = await _context.CartItems
@@ -217,14 +230,26 @@ namespace TanuiApp.Controllers
             // Calculate total
             var totalAmount = cartItems.Sum(c => c.Product.Price * c.Quantity);
 
+            // Generate tracking number
+            var trackingNumber = $"TRK{DateTime.Now:yyyyMMddHHmmss}";
+
             // Create order
             var order = new Order
             {
                 UserId = user.Id,
                 OrderDate = DateTime.Now,
-                TotalAmount = totalAmount,
+                TotalAmount = totalAmount + deliveryFee,
                 PaymentMethod = paymentMethod ?? "Cash on Delivery",
-                Status = paymentMethod == "Mpesa" ? "Paid" : "Pending"
+                Status = paymentMethod == "Mpesa" ? "Paid" : "Pending",
+                DeliveryServiceId = deliveryServiceId,
+                DeliveryStatus = "Preparing",
+                DeliveryAddress = deliveryAddress,
+                DeliveryTown = deliveryTown,
+                DeliveryCounty = deliveryCounty,
+                DeliveryFee = deliveryFee,
+                TrackingNumber = trackingNumber,
+                BuyerLatitude = null, // TODO: Get from browser geolocation
+                BuyerLongitude = null
             };
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -249,7 +274,7 @@ namespace TanuiApp.Controllers
 
                     // Notify seller
                     var sellerId = item.Product.UserId;
-                    var notification = new Notification
+                    var sellerNotification = new Notification
                     {
                         UserId = sellerId,
                         Title = "New Order Received",
@@ -257,15 +282,29 @@ namespace TanuiApp.Controllers
                         Type = "order",
                         CreatedAt = DateTime.Now
                     };
-                    _context.Notifications.Add(notification);
+                    _context.Notifications.Add(sellerNotification);
                 }
+            }
+
+            // Notify delivery service
+            if (!string.IsNullOrEmpty(deliveryServiceId))
+            {
+                var deliveryNotification = new Notification
+                {
+                    UserId = deliveryServiceId,
+                    Title = "New Delivery Assignment",
+                    Body = $"New delivery order #{order.Id} to {deliveryTown}, {deliveryCounty}. Tracking: {trackingNumber}",
+                    Type = "delivery",
+                    CreatedAt = DateTime.Now
+                };
+                _context.Notifications.Add(deliveryNotification);
             }
 
             // Clear cart
             _context.CartItems.RemoveRange(cartItems);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Order #{order.Id} placed successfully!";
+            TempData["Success"] = $"Order #{order.Id} placed successfully! Tracking Number: {trackingNumber}";
             return RedirectToAction("MyOrders");
         }
 

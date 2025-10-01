@@ -94,6 +94,13 @@ try
             // Ensure database exists
             await context.Database.EnsureCreatedAsync();
             logger.LogInformation("Database initialization completed");
+
+            // Seed default admin and test data
+            var userManager = services.GetRequiredService<UserManager<Users>>();
+            await DbSeeder.SeedDefaultAdmin(userManager);
+            
+            // Uncomment to seed test users for development
+            // await DbSeeder.SeedTestData(userManager);
         }
         catch (Exception ex)
         {

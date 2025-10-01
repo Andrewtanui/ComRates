@@ -14,8 +14,9 @@ namespace TanuiApp.Data
         public DbSet<WishlistItem> WishlistItems { get; set; } 
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-    public DbSet<Order> Orders { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<UserReport> UserReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -83,6 +84,19 @@ namespace TanuiApp.Data
                 .HasOne(oi => oi.Product)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // UserReport relationships - prevent cascade delete conflicts
+            builder.Entity<UserReport>()
+                .HasOne(r => r.ReportedUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserReport>()
+                .HasOne(r => r.Reporter)
+                .WithMany()
+                .HasForeignKey(r => r.ReporterId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

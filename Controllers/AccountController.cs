@@ -42,13 +42,37 @@ namespace UsersApp.Controllers
                     var user = await userManager.FindByEmailAsync(model.Email);
                     if (user != null)
                     {
+                        // Check if user is banned
+                        if (user.IsBanned)
+                        {
+                            await signInManager.SignOutAsync();
+                            ModelState.AddModelError("", $"Your account has been permanently banned. Reason: {user.BanReason ?? "Violation of terms"}. This email cannot be used again.");
+                            return View(model);
+                        }
+
+                        // Check if user is suspended
+                        if (user.IsSuspended)
+                        {
+                            await signInManager.SignOutAsync();
+                            ModelState.AddModelError("", $"Your account has been suspended. Reason: {user.SuspensionReason ?? "Under review"}. Please contact support.");
+                            return View(model);
+                        }
+
                         var roles = await userManager.GetRolesAsync(user);
                         logger.LogInformation($"User {user.Email} logged in with role: {user.UserRole}, Assigned roles: {string.Join(", ", roles)}");
                         
-                        // Redirect sellers to their dashboard, buyers to home
-                        if (user.UserRole == UserRole.Seller || user.UserRole == UserRole.SystemAdmin)
+                        // Redirect users based on their role
+                        if (user.UserRole == UserRole.SystemAdmin)
+                        {
+                            return RedirectToAction("Index", "AdminDashboard");
+                        }
+                        else if (user.UserRole == UserRole.Seller)
                         {
                             return RedirectToAction("Index", "SellerDashboard");
+                        }
+                        else if (user.UserRole == UserRole.DeliveryService)
+                        {
+                            return RedirectToAction("Index", "DeliveryDashboard");
                         }
                     }
                     return RedirectToAction("Index", "Home");
@@ -78,6 +102,13 @@ namespace UsersApp.Controllers
                     var existingUser = await userManager.FindByEmailAsync(model.Email);
                     if (existingUser != null)
                     {
+                        // Check if the existing account is banned
+                        if (existingUser.IsBanned)
+                        {
+                            ModelState.AddModelError("Email", "This email has been permanently banned and cannot be used to create an account.");
+                            return View(model);
+                        }
+                        
                         ModelState.AddModelError("Email", "An account with this email already exists.");
                         return View(model);
                     }

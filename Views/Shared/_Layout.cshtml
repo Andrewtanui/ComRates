@@ -3,12 +3,14 @@
 @inject SignInManager<Users> SignInManager
 @inject UserManager<Users> UserManager
 @{
-    // Precompute role flag once to keep markup clean
+    // Precompute role flags once to keep markup clean
     var isSeller = false;
+    var isDeliveryService = false;
     if (SignInManager.IsSignedIn(User))
     {
         var currentUser = await UserManager.GetUserAsync(User);
         isSeller = currentUser?.UserRole == UserRole.Seller || currentUser?.UserRole == UserRole.SystemAdmin;
+        isDeliveryService = currentUser?.UserRole == UserRole.DeliveryService;
     }
 }
 
@@ -73,6 +75,14 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="SellerDashboard" asp-action="Index">
                                     <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                                </a>
+                            </li>
+                        }
+                        else if (isDeliveryService)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="DeliveryDashboard" asp-action="Index">
+                                    <i class="bi bi-truck me-1"></i>Delivery Dashboard
                                 </a>
                             </li>
                         }
