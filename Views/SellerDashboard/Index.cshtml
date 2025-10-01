@@ -123,7 +123,7 @@
                     <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Sales by Day of Week</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="salesByDayChart" height="250"></canvas>
+                    <canvas id="salesByDayChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@
                     <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Sales by Hour of Day</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="salesByHourChart" height="250"></canvas>
+                    <canvas id="salesByHourChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -401,8 +401,10 @@
                                 }
                             },
                             ticks: {
-                                stepSize: 1
-                            }
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            suggestedMax: Math.max(...dayData.map(d => d.orderCount)) + 2
                         }
                     }
                 }
@@ -469,8 +471,10 @@
                                 }
                             },
                             ticks: {
-                                stepSize: 1
-                            }
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            suggestedMax: Math.max(...hourData.map(d => d.orderCount)) + 2
                         }
                     }
                 }
