@@ -3,11 +3,16 @@
     ViewData["Title"] = "Seller Dashboard";
 }
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 dashboard">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold"><i class="bi bi-speedometer2 me-2"></i>Inventory Management Dashboard</h2>
-            <p class="text-muted">Welcome back! Here's your store performance overview.</p>
+            <div class="dashboard-header">
+                <span class="icon"><i class="bi bi-speedometer2 fs-4"></i></span>
+                <div>
+                    <h2 class="fw-bold mb-1">Inventory Management Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back! Here's your store performance overview.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -153,7 +158,7 @@
                     @if (Model.TopSellingProducts.Any())
                     {
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-modern">
                                 <thead>
                                     <tr>
                                         <th>Product</th>

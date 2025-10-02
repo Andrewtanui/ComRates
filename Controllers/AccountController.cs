@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TanuiApp.Data;
 using TanuiApp.Models;
 using TanuiApp.ViewModels;
 
@@ -11,17 +13,20 @@ namespace UsersApp.Controllers
         private readonly UserManager<Users> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly ILogger<AccountController> logger;
+        private readonly AppDbContext context;
 
         public AccountController(
             SignInManager<Users> signInManager, 
             UserManager<Users> userManager, 
             RoleManager<IdentityRole> roleManager,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            AppDbContext context)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
             this.roleManager = roleManager;
             this.logger = logger;
+            this.context = context;
         }
 
         public IActionResult Login()
@@ -88,6 +93,11 @@ namespace UsersApp.Controllers
 
         public IActionResult Register()
         {
+            // Load active delivery companies for the dropdown
+            ViewBag.DeliveryCompanies = context.DeliveryCompanies
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToList();
             return View();
         }
 
@@ -137,11 +147,23 @@ namespace UsersApp.Controllers
                     // Handle delivery service specific fields
                     if (model.UserRole == UserRole.DeliveryService)
                     {
-                        users.CompanyName = model.CompanyName;
-                        users.LicenseNumber = model.LicenseNumber;
+                        // CompanyName and LicenseNumber are admin-managed; do not bind from registration form
                         users.VehicleInfo = model.VehicleInfo;
+                        users.DeliveryCompanyId = model.DeliveryCompanyId;
+                        if (model.DeliveryCompanyId.HasValue)
+                        {
+                            var company = await context.DeliveryCompanies.FirstOrDefaultAsync(c => c.Id == model.DeliveryCompanyId.Value);
+                            if (company != null)
+                            {
+                                // If company name not provided, default to selected delivery company name
+                                if (string.IsNullOrWhiteSpace(users.CompanyName))
+                                {
+                                    users.CompanyName = company.Name;
+                                }
+                            }
+                        }
                         
-                        logger.LogInformation($"Registering delivery service: {model.CompanyName}");
+                        logger.LogInformation($"Registering delivery service. DeliveryCompanyId: {model.DeliveryCompanyId}, VehicleInfo: {model.VehicleInfo}");
                     }
 
                     // Create user
@@ -199,6 +221,11 @@ namespace UsersApp.Controllers
                             ModelState.AddModelError("", error.Description);
                         }
 
+                        // Repopulate companies when returning with errors
+                        ViewBag.DeliveryCompanies = context.DeliveryCompanies
+                            .Where(c => c.IsActive)
+                            .OrderBy(c => c.Name)
+                            .ToList();
                         return View(model);
                     }
                 }
@@ -206,9 +233,19 @@ namespace UsersApp.Controllers
                 {
                     logger.LogError($"Exception during registration: {ex.Message}");
                     ModelState.AddModelError("", "An error occurred during registration. Please try again.");
+                    // Repopulate companies on exception
+                    ViewBag.DeliveryCompanies = context.DeliveryCompanies
+                        .Where(c => c.IsActive)
+                        .OrderBy(c => c.Name)
+                        .ToList();
                     return View(model);
                 }
             }
+            // Repopulate companies when model state is invalid
+            ViewBag.DeliveryCompanies = context.DeliveryCompanies
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToList();
             return View(model);
         }
 

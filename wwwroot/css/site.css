@@ -578,3 +578,71 @@ body {
         font-size: 1.2rem;
     }
 }
+
+/* Dashboard Enhancements */
+.dashboard-header {
+    background: linear-gradient(135deg, rgba(13,110,253,0.15), rgba(25,135,84,0.15));
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard-header .icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    color: var(--primary);
+}
+
+.dashboard-header h2 {
+    margin: 0;
+}
+
+.dashboard .card {
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.dashboard .card .card-body .text-muted.small {
+    letter-spacing: .02em;
+}
+
+.dashboard .kpi-trend {
+    font-size: .85rem;
+}
+
+.table-modern thead th {
+    background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.00));
+    border-bottom: 2px solid rgba(0,0,0,0.06) !important;
+}
+
+.table-modern tbody tr:hover {
+    background-color: rgba(13,110,253,0.04);
+}
+
+.badge-soft {
+    background-color: rgba(13,110,253,0.12);
+    color: #0d6efd;
+}
+
+.badge-soft-success {
+    background-color: rgba(25,135,84,0.12);
+    color: #198754;
+}
+
+.badge-soft-warning {
+    background-color: rgba(255,193,7,0.18);
+    color: #b98a00;
+}
+
+.badge-soft-danger {
+    background-color: rgba(220,53,69,0.12);
+    color: #dc3545;
+}

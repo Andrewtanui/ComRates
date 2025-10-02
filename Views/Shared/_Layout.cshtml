@@ -6,11 +6,15 @@
     // Precompute role flags once to keep markup clean
     var isSeller = false;
     var isDeliveryService = false;
+    var isSystemAdmin = false;
+    var isBuyer = false;
     if (SignInManager.IsSignedIn(User))
     {
         var currentUser = await UserManager.GetUserAsync(User);
-        isSeller = currentUser?.UserRole == UserRole.Seller || currentUser?.UserRole == UserRole.SystemAdmin;
+        isSystemAdmin = currentUser?.UserRole == UserRole.SystemAdmin;
+        isSeller = currentUser?.UserRole == UserRole.Seller;
         isDeliveryService = currentUser?.UserRole == UserRole.DeliveryService;
+        isBuyer = currentUser?.UserRole == UserRole.Buyer;
     }
 }
 
@@ -45,18 +49,26 @@
                 <div class="d-flex align-items-center order-lg-3 order-1">
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <!-- Search (desktop only) -->
-                        <form class="d-none d-md-flex me-2" asp-controller="Products" asp-action="Search" method="get">
-                            <div class="input-group">
-                                <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
-                                <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
-                            </div>
-                        </form>
+                        @* Search: Only for Buyers *@
+                        @if (isBuyer)
+                        {
+                            <!-- Search (desktop only) -->
+                            <form class="d-none d-md-flex me-2" asp-controller="Products" asp-action="Search" method="get">
+                                <div class="input-group">
+                                    <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
+                                    <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
+                                </div>
+                            </form>
+                        }
 
-                        <!-- Chat button -->
-                        <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat">
-                            <i class="bi bi-chat-dots"></i>
-                        </a>
+                        @* Chat: Available for Sellers and Delivery, hidden for Admin *@
+                        @if (!isSystemAdmin)
+                        {
+                            <!-- Chat button -->
+                            <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat">
+                                <i class="bi bi-chat-dots"></i>
+                            </a>
+                        }
                     }
 
                     <!-- Hamburger -->
@@ -70,7 +82,15 @@
                 <!-- Collapsible Nav -->
                 <div class="collapse navbar-collapse order-lg-2 order-3" id="navbarNav">
                     <ul class="navbar-nav flex-grow-1 me-3">
-                        @if (isSeller)
+                        @if (isSystemAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="AdminDashboard" asp-action="Index">
+                                    <i class="bi bi-shield-check me-1"></i>Admin Dashboard
+                                </a>
+                            </li>
+                        }
+                        else if (isSeller)
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="SellerDashboard" asp-action="Index">
@@ -97,12 +117,21 @@
 
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            @await Component.InvokeAsync("CategoryMenu")
+                            @* Categories: Only for Buyers *@
+                            @if (isBuyer)
+                            {
+                                @await Component.InvokeAsync("CategoryMenu")
+                            }
 
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
-                            </li>
+                            @* Products: Only for Buyers *@
+                            @if (isBuyer)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
+                                </li>
+                            }
                             
+                            @* Sell: Only for Sellers *@
                             @if (isSeller)
                             {
                                 <li class="nav-item">
@@ -122,19 +151,27 @@
 
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <!-- Search (mobile only) -->
-                        <form class="d-md-none mb-2" asp-controller="Products" asp-action="Search" method="get">
-                            <div class="input-group">
-                                <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
-                                <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
-                            </div>
-                        </form>
+                        @* Search (mobile): Only for Buyers *@
+                        @if (isBuyer)
+                        {
+                            <!-- Search (mobile only) -->
+                            <form class="d-md-none mb-2" asp-controller="Products" asp-action="Search" method="get">
+                                <div class="input-group">
+                                    <input class="form-control" type="search" name="query" placeholder="Search..." aria-label="Search">
+                                    <button class="btn btn-light" type="submit"><i class="bi bi-search"></i></button>
+                                </div>
+                            </form>
+                        }
 
-                        <!-- Notifications -->
-                        <a class="btn btn-light position-relative me-2" asp-controller="Notifications" asp-action="Index">
-                            <i class="bi bi-bell"></i>
-                            <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
-                        </a>
+                        @* Notifications: Hidden for System Admin *@
+                        @if (!isSystemAdmin)
+                        {
+                            <!-- Notifications -->
+                            <a class="btn btn-light position-relative me-2" asp-controller="Notifications" asp-action="Index">
+                                <i class="bi bi-bell"></i>
+                                <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                            </a>
+                        }
                     }
 
                     <partial name="_LoginPartial" />

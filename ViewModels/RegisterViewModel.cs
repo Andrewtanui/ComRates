@@ -62,15 +62,13 @@ namespace TanuiApp.ViewModels
         [Display(Name = "Postal Code")]
         public string? PostalCode { get; set; }
 
-        // Delivery Service specific fields
-        [Display(Name = "Company Name")]
-        public string? CompanyName { get; set; }
-
-        [Display(Name = "License Number")]
-        public string? LicenseNumber { get; set; }
-
+        // Delivery Service specific fields (admin-managed company and basic info)
         [Display(Name = "Vehicle Information")]
         public string? VehicleInfo { get; set; }
+
+        // Admin-managed delivery company selection
+        [Display(Name = "Delivery Company")]
+        public int? DeliveryCompanyId { get; set; }
 
         // Preferences
         [Display(Name = "Receive Email Notifications")]

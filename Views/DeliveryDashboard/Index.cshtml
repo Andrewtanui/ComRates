@@ -3,11 +3,16 @@
     ViewData["Title"] = "Delivery Dashboard";
 }
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 dashboard">
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold"><i class="bi bi-truck me-2"></i>Delivery Service Dashboard</h2>
-            <p class="text-muted">Manage your deliveries and track your performance</p>
+            <div class="dashboard-header">
+                <span class="icon"><i class="bi bi-truck fs-4"></i></span>
+                <div>
+                    <h2 class="fw-bold mb-1">Delivery Service Dashboard</h2>
+                    <p class="text-muted mb-0">Manage your deliveries and track your performance</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -89,7 +94,7 @@
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-modern">
                                 <thead>
                                     <tr>
                                         <th>Tracking #</th>

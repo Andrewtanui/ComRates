@@ -3,33 +3,50 @@
 @inject SignInManager<Users> SignInManager;
 @inject UserManager<Users> UserManager;
 
+@{
+    // Get current user role for conditional rendering
+    var currentUser = await UserManager.GetUserAsync(User);
+    var isBuyer = currentUser?.UserRole == UserRole.Buyer;
+    var isSeller = currentUser?.UserRole == UserRole.Seller;
+    var isDeliveryService = currentUser?.UserRole == UserRole.DeliveryService;
+    var isSystemAdmin = currentUser?.UserRole == UserRole.SystemAdmin;
+}
+
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        <!--Profiles View-->
-        <li class="nav-item">
-            <a class="nav-link text-white" asp-controller="Profile" asp-action="PublicCatalog"><i class="bi bi-people me-1"></i>Profiles</a>
-        </li>
+        @* Profiles: Hidden for System Admin *@
+        @if (!isSystemAdmin)
+        {
+            <!--Profiles View-->
+            <li class="nav-item">
+                <a class="nav-link text-white" asp-controller="Profile" asp-action="PublicCatalog"><i class="bi bi-people me-1"></i>Profiles</a>
+            </li>
+        }
 
-        <!-- Cart -->
-        <li class="nav-item me-2">
-            <a class="nav-link text-white position-relative" asp-controller="Cart" asp-action="MyCart" title="Shopping Cart">
-                <i class="bi bi-cart3 fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small" id="cart-count">
-                    3
-                </span>
-            </a>
-        </li>
+        @* Cart & Wishlist: Only for Buyers *@
+        @if (isBuyer)
+        {
+            <!-- Cart -->
+            <li class="nav-item me-2">
+                <a class="nav-link text-white position-relative" asp-controller="Cart" asp-action="MyCart" title="Shopping Cart">
+                    <i class="bi bi-cart3 fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger small" id="cart-count">
+                        3
+                    </span>
+                </a>
+            </li>
 
-        <!-- Wishlist -->
-        <li class="nav-item me-2">
-            <a class="nav-link text-white position-relative" asp-controller="Wishlist" asp-action="MyWishlist" title="Wishlist">
-                <i class="bi bi-heart fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning small" id="wishlist-count">
-                    2
-                </span>
-            </a>
-        </li>
+            <!-- Wishlist -->
+            <li class="nav-item me-2">
+                <a class="nav-link text-white position-relative" asp-controller="Wishlist" asp-action="MyWishlist" title="Wishlist">
+                    <i class="bi bi-heart fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning small" id="wishlist-count">
+                        2
+                    </span>
+                </a>
+            </li>
+        }
 
         <!-- Account Dropdown -->
         <li class="nav-item dropdown">
@@ -42,16 +59,14 @@
                     <strong>@User.Identity.Name</strong>
                 </li>
                 <li><hr class="dropdown-divider"></li>
-                <li>
-                    <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
-                        <i class="bi bi-person me-2"></i>Profile Settings
-                    </a>
-                </li>
-                @{ // Show features based on user role
-                    var currentUser = await UserManager.GetUserAsync(User);
-                    var isSeller = currentUser?.UserRole == UserRole.Seller || currentUser?.UserRole == UserRole.SystemAdmin;
-                    var isBuyer = currentUser?.UserRole == UserRole.Buyer;
-                    var isDeliveryService = currentUser?.UserRole == UserRole.DeliveryService;
+                @* Profile Settings: Hidden for System Admin *@
+                @if (!isSystemAdmin)
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
+                            <i class="bi bi-person me-2"></i>Profile Settings
+                        </a>
+                    </li>
                 }
                 @if (isBuyer)
                 {
@@ -69,6 +84,7 @@
                 </li>
                 }
                 
+                @* My Listings: Only for Sellers *@
                 @if (isSeller)
                 {
                     <li>
@@ -77,13 +93,15 @@
                         </a>
                     </li>
                 }
+                
+                @* My Orders: Only for Buyers *@
                 @if (isBuyer)
                 {
-                <li>
-                    <a class="dropdown-item" asp-controller="Cart" asp-action="MyOrders">
-                        <i class="bi bi-shop me-2"></i>My Orders
-                    </a>
-                </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Cart" asp-action="MyOrders">
+                            <i class="bi bi-shop me-2"></i>My Orders
+                        </a>
+                    </li>
                 }
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -91,11 +109,15 @@
                         <i class="bi bi-gear me-2"></i>Settings
                     </a>
                 </li>
-                <li>
-                    <a class="dropdown-item" asp-controller="Support" asp-action="Index">
-                        <i class="bi bi-question-circle me-2"></i>Help & Support
-                    </a>
-                </li>
+                @* Help & Support: Hidden for System Admin *@
+                @if (!isSystemAdmin)
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="Support" asp-action="Index">
+                            <i class="bi bi-question-circle me-2"></i>Help & Support
+                        </a>
+                    </li>
+                }
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">

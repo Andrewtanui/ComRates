@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TanuiApp.Models
 {
@@ -39,6 +40,11 @@ namespace TanuiApp.Models
         public string? VehicleInfo { get; set; }
         public bool IsVerified { get; set; } = false;
         public decimal? DeliveryRating { get; set; }
+
+        // Link to Admin-managed DeliveryCompany
+        public int? DeliveryCompanyId { get; set; }
+        [ForeignKey("DeliveryCompanyId")]
+        public virtual DeliveryCompany? DeliveryCompany { get; set; }
 
         // Account moderation fields
         public bool IsSuspended { get; set; } = false;

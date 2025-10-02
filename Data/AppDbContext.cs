@@ -17,6 +17,7 @@ namespace TanuiApp.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
+        public DbSet<DeliveryCompany> DeliveryCompanies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -98,6 +99,13 @@ namespace TanuiApp.Data
                 .WithMany()
                 .HasForeignKey(r => r.ReporterId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // DeliveryCompany relationships
+            builder.Entity<Users>()
+                .HasOne(u => u.DeliveryCompany)
+                .WithMany()
+                .HasForeignKey(u => u.DeliveryCompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

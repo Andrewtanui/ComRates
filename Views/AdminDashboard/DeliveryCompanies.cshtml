@@ -1,0 +1,111 @@
+@model IEnumerable<TanuiApp.Models.DeliveryCompany>
+@{
+    ViewData["Title"] = "Delivery Companies";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold"><i class="bi bi-building me-2"></i>Delivery Companies</h3>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <strong><i class="bi bi-plus-circle me-2"></i>Add New Delivery Company</strong>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateDeliveryCompany" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label class="form-label">Company Name</label>
+                    <input name="name" class="form-control" placeholder="e.g. Swift Deliveries" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">License Number</label>
+                    <input name="licenseNumber" class="form-control" placeholder="e.g. DL-12345" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Contact Email</label>
+                    <input name="contactEmail" type="email" class="form-control" placeholder="company@example.com" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Contact Phone</label>
+                    <input name="contactPhone" class="form-control" placeholder="e.g. +2547XXXXXXXX" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Town</label>
+                    <input name="town" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">County</label>
+                    <input name="county" class="form-control" />
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Save Company</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <strong><i class="bi bi-list-ul me-2"></i>All Companies</strong>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>License</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td><strong>@c.Name</strong></td>
+                                <td>@c.LicenseNumber</td>
+                                <td>
+                                    <div>@c.ContactEmail</div>
+                                    <div class="text-muted small">@c.ContactPhone</div>
+                                </td>
+                                <td>@c.Town, @c.County</td>
+                                <td>
+                                    <span class="badge @(c.IsActive ? "bg-success" : "bg-secondary")">@(c.IsActive ? "Active" : "Inactive")</span>
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="ToggleDeliveryCompany" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button class="btn btn-sm @(c.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                            <i class="bi @(c.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i> @(c.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteDeliveryCompany" method="post" class="d-inline" onsubmit="return confirm('Delete this company?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

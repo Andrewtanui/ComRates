@@ -344,5 +344,74 @@ namespace TanuiApp.Controllers
 
             return View(deliveryServices);
         }
+
+        // Delivery Companies management
+        public async Task<IActionResult> DeliveryCompanies()
+        {
+            var companies = await _context.DeliveryCompanies
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+            return View(companies);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateDeliveryCompany(string name, string? licenseNumber, string? contactEmail, string? contactPhone, string? town, string? county)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                TempData["Error"] = "Company name is required.";
+                return RedirectToAction("DeliveryCompanies");
+            }
+
+            _context.DeliveryCompanies.Add(new DeliveryCompany
+            {
+                Name = name.Trim(),
+                LicenseNumber = licenseNumber,
+                ContactEmail = contactEmail,
+                ContactPhone = contactPhone,
+                Town = town,
+                County = county,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Delivery company created.";
+            return RedirectToAction("DeliveryCompanies");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleDeliveryCompany(int id)
+        {
+            var company = await _context.DeliveryCompanies.FindAsync(id);
+            if (company == null)
+            {
+                TempData["Error"] = "Company not found.";
+                return RedirectToAction("DeliveryCompanies");
+            }
+            company.IsActive = !company.IsActive;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Company {(company.IsActive ? "activated" : "deactivated")}.";
+            return RedirectToAction("DeliveryCompanies");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDeliveryCompany(int id)
+        {
+            var company = await _context.DeliveryCompanies.FindAsync(id);
+            if (company == null)
+            {
+                TempData["Error"] = "Company not found.";
+                return RedirectToAction("DeliveryCompanies");
+            }
+
+            _context.DeliveryCompanies.Remove(company);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Company deleted.";
+            return RedirectToAction("DeliveryCompanies");
+        }
     }
 }
