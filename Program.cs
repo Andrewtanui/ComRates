@@ -59,6 +59,10 @@ try
     builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
     builder.Services.AddSingleton<IChatbotService, ChatbotService>();
 
+    // SMTP Email
+    builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+    builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+
     // Configure logging
     builder.Services.AddLogging(logging =>
     {

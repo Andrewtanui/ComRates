@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -298,6 +298,60 @@ namespace TanuiApp.Controllers
 
             ViewBag.User = user;
             return View(products);
+        }
+
+        // Report a user account from the public profile page
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReportUser(string id, string reason, string? description)
+        {
+            // id is the reported user's id
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                TempData["Error"] = "Invalid user to report.";
+                return RedirectToAction(nameof(PublicCatalog));
+            }
+
+            var reportedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (reportedUser == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(PublicCatalog));
+            }
+
+            var reporter = await _userManager.GetUserAsync(User);
+            if (reporter == null)
+            {
+                return Challenge();
+            }
+
+            if (reporter.Id == reportedUser.Id)
+            {
+                TempData["Error"] = "You cannot report yourself.";
+                return RedirectToAction(nameof(ViewProfile), new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "Please select a reason for reporting.";
+                return RedirectToAction(nameof(ViewProfile), new { id });
+            }
+
+            var report = new UserReport
+            {
+                ReportedUserId = reportedUser.Id,
+                ReporterId = reporter.Id,
+                Reason = reason,
+                Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+                ReportedAt = DateTime.Now,
+                IsResolved = false
+            };
+
+            _context.UserReports.Add(report);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Thanks for your report. Our team will review it shortly.";
+            return RedirectToAction(nameof(ViewProfile), new { id });
         }
     }
 }

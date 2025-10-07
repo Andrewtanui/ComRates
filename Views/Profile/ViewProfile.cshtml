@@ -17,7 +17,58 @@
             <a class="btn btn-outline-success ms-auto" asp-controller="Messages" asp-action="Chat" asp-route-withUserId="@user.Id">
                 <i class="bi bi-chat-dots"></i> Message @user.FullName
             </a>
+            <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#reportUserModal">
+                <i class="bi bi-flag"></i> Report account
+            </button>
         }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <!-- Report User Modal -->
+    <div class="modal fade" id="reportUserModal" tabindex="-1" aria-labelledby="reportUserLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportUserLabel">Report @user?.FullName</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-controller="Profile" asp-action="ReportUser" method="post">
+                    <div class="modal-body">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@user?.Id" />
+
+                        <div class="mb-3">
+                            <label for="reportReason" class="form-label">Reason</label>
+                            <select class="form-select" id="reportReason" name="reason" required>
+                                <option value="">Select a reason</option>
+                                <option>Spam</option>
+                                <option>Harassment</option>
+                                <option>Fraud or scam</option>
+                                <option>Inappropriate content</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reportDescription" class="form-label">Description (optional)</label>
+                            <textarea class="form-control" id="reportDescription" name="description" rows="4" placeholder="Provide additional details..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Submit report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     @if (!Model.Any())

@@ -53,6 +53,7 @@ namespace TanuiApp.Controllers
             var ordersWithSellerProducts = await _context.Orders
                 .Include(o => o.Items)
                     .ThenInclude(oi => oi.Product)
+                .Include(o => o.Buyer)
                 .Where(o => o.Items.Any(oi => sellerProductIds.Contains(oi.ProductId)))
                 .ToListAsync();
 
@@ -162,7 +163,9 @@ namespace TanuiApp.Controllers
                 {
                     OrderId = o.Id,
                     OrderDate = o.OrderDate,
-                    CustomerName = o.UserId,
+                    CustomerName = o.Buyer != null && !string.IsNullOrWhiteSpace(o.Buyer.FullName)
+                        ? o.Buyer.FullName
+                        : (o.Buyer != null && !string.IsNullOrWhiteSpace(o.Buyer.Email) ? o.Buyer.Email : o.UserId),
                     TotalAmount = o.Items
                         .Where(oi => sellerProductIds.Contains(oi.ProductId))
                         .Sum(oi => oi.Price * oi.Quantity),

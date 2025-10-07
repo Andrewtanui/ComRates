@@ -1,0 +1,288 @@
+@model IEnumerable<TanuiApp.Models.UserReport>
+@{
+    ViewData["Title"] = "User Reports";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-flag me-2"></i>User Reports</h5>
+        </div>
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-modern">
+                        <thead>
+                            <tr>
+                                <th>Reported User</th>
+                                <th>Reporter</th>
+                                <th>Reason</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model)
+                            {
+                                <tr>
+                                    <td>@(r.ReportedUser?.FullName ?? r.ReportedUserId)</td>
+                                    <td>@(r.Reporter?.FullName ?? r.ReporterId)</td>
+                                    <td>@r.Reason</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.Description) ? "-" : r.Description)</td>
+                                    <td>@r.ReportedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>
+                                        @if (r.IsResolved)
+                                        {
+                                            <span class="badge bg-success">Resolved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Pending</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning me-1" data-action="suspend" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Suspend</button>
+                                        <button class="btn btn-sm btn-outline-primary me-1" data-action="review" data-report-id="@r.Id" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Review</button>
+                                        <button class="btn btn-sm btn-outline-danger" data-action="ban" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Ban</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No reports available.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Suspend Modal -->
+<div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="suspendLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="suspendLabel">Suspend account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Account</label>
+          <input type="text" class="form-control" id="suspendUserName" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Reason</label>
+          <input type="text" class="form-control" id="suspendReason" placeholder="Enter suspension reason" />
+        </div>
+        <input type="hidden" id="suspendUserId" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmSuspend">Suspend</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<!-- Ban Modal -->
+<div class="modal fade" id="banModal" tabindex="-1" aria-labelledby="banLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="banLabel">Ban account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Account</label>
+          <input type="text" class="form-control" id="banUserName" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Reason</label>
+          <input type="text" class="form-control" id="banReason" placeholder="Enter ban reason" />
+        </div>
+        <input type="hidden" id="banUserId" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmBan">Ban</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reviewLabel">Review report</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Reported account</label>
+          <input type="text" class="form-control" id="reviewUserName" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Admin notes</label>
+          <textarea class="form-control" id="reviewNotes" rows="4" placeholder="Add notes (visible in email/notification)"></textarea>
+        </div>
+        <input type="hidden" id="reviewReportId" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmReview">Mark as reviewed</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+@section Scripts {
+<script>
+  (function () {
+    console.log('Admin Reports: Initializing modals and event handlers...');
+    
+    const suspendModalEl = document.getElementById('suspendModal');
+    const banModalEl = document.getElementById('banModal');
+    const reviewModalEl = document.getElementById('reviewModal');
+    
+    if (!suspendModalEl || !banModalEl || !reviewModalEl) {
+      console.error('Admin Reports: Modal elements not found!');
+      return;
+    }
+    
+    const suspendModal = new bootstrap.Modal(suspendModalEl);
+    const banModal = new bootstrap.Modal(banModalEl);
+    const reviewModal = new bootstrap.Modal(reviewModalEl);
+
+    // Event delegation for action buttons
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      
+      e.preventDefault();
+      const action = btn.getAttribute('data-action');
+      console.log('Admin Reports: Action clicked:', action);
+      
+      if (action === 'suspend') {
+        const userId = btn.getAttribute('data-user-id');
+        const userName = btn.getAttribute('data-user-name');
+        console.log('Suspend user:', userId, userName);
+        document.getElementById('suspendUserId').value = userId;
+        document.getElementById('suspendUserName').value = userName;
+        document.getElementById('suspendReason').value = '';
+        suspendModal.show();
+      } else if (action === 'ban') {
+        const userId = btn.getAttribute('data-user-id');
+        const userName = btn.getAttribute('data-user-name');
+        console.log('Ban user:', userId, userName);
+        document.getElementById('banUserId').value = userId;
+        document.getElementById('banUserName').value = userName;
+        document.getElementById('banReason').value = '';
+        banModal.show();
+      } else if (action === 'review') {
+        const reportId = btn.getAttribute('data-report-id');
+        const userName = btn.getAttribute('data-user-name');
+        console.log('Review report:', reportId, userName);
+        document.getElementById('reviewReportId').value = reportId;
+        document.getElementById('reviewUserName').value = userName;
+        document.getElementById('reviewNotes').value = '';
+        reviewModal.show();
+      }
+    });
+
+    async function postJson(url, data) {
+      console.log('Posting to:', url, data);
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(data)
+        });
+        const json = await res.json();
+        console.log('Response:', json);
+        return json;
+      } catch (err) {
+        console.error('Post error:', err);
+        return { success: false, message: err.message };
+      }
+    }
+
+    document.getElementById('confirmSuspend').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Suspending...';
+      
+      const userId = document.getElementById('suspendUserId').value;
+      const reason = document.getElementById('suspendReason').value;
+      
+      if (!reason.trim()) {
+        alert('Please enter a suspension reason');
+        btn.disabled = false;
+        btn.textContent = 'Suspend';
+        return;
+      }
+      
+      const result = await postJson('/AdminDashboard/SuspendUser', { userId, reason });
+      if (result.success) { 
+        location.reload(); 
+      } else { 
+        alert(result.message || 'Failed to suspend user');
+        btn.disabled = false;
+        btn.textContent = 'Suspend';
+      }
+    });
+
+    document.getElementById('confirmBan').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Banning...';
+      
+      const userId = document.getElementById('banUserId').value;
+      const reason = document.getElementById('banReason').value;
+      
+      if (!reason.trim()) {
+        alert('Please enter a ban reason');
+        btn.disabled = false;
+        btn.textContent = 'Ban';
+        return;
+      }
+      
+      const result = await postJson('/AdminDashboard/BanUser', { userId, reason });
+      if (result.success) { 
+        location.reload(); 
+      } else { 
+        alert(result.message || 'Failed to ban user');
+        btn.disabled = false;
+        btn.textContent = 'Ban';
+      }
+    });
+
+    document.getElementById('confirmReview').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Reviewing...';
+      
+      const reportId = document.getElementById('reviewReportId').value;
+      const adminNotes = document.getElementById('reviewNotes').value;
+      
+      const result = await postJson('/AdminDashboard/ResolveReport', { reportId, adminNotes });
+      if (result.success) { 
+        location.reload(); 
+      } else { 
+        alert(result.message || 'Failed to resolve report');
+        btn.disabled = false;
+        btn.textContent = 'Mark as reviewed';
+      }
+    });
+    
+    console.log('Admin Reports: Initialization complete');
+  })();
+</script>
+}
