@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using TanuiApp.Data;
 using TanuiApp.Models;
 using TanuiApp.ViewModels;
+using TanuiApp.Services;
 
 namespace TanuiApp.Controllers
 {
@@ -14,12 +15,18 @@ namespace TanuiApp.Controllers
         private readonly UserManager<Users> _userManager;
         private readonly SignInManager<Users> _signInManager;
         private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
+        private readonly IEmailSender _emailSender;
+        private readonly ILogger<ProfileController> _logger;
 
-        public ProfileController(UserManager<Users> userManager, SignInManager<Users> signInManager, AppDbContext context)
+        public ProfileController(UserManager<Users> userManager, SignInManager<Users> signInManager, AppDbContext context, INotificationService notificationService, IEmailSender emailSender, ILogger<ProfileController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+            _notificationService = notificationService;
+            _emailSender = emailSender;
+            _logger = logger;
         }
 
         // Display profile settings page
@@ -349,6 +356,41 @@ namespace TanuiApp.Controllers
 
             _context.UserReports.Add(report);
             await _context.SaveChangesAsync();
+
+            // Notify the reported user
+            await _notificationService.SendNotificationAsync(
+                reportedUser.Id,
+                "You Have Been Reported",
+                $"Your account has been reported for: {reason}. Our team will review this matter. Please ensure you follow our community guidelines.",
+                "admin"
+            );
+
+            // Send email to reported user
+            if (!string.IsNullOrWhiteSpace(reportedUser.Email))
+            {
+                try
+                {
+                    var emailSubject = "Account Report Notification";
+                    var emailBody = $@"
+                        <html>
+                        <body style='font-family: Arial, sans-serif;'>
+                            <h2>Account Report Notification</h2>
+                            <p>Dear {reportedUser.FullName},</p>
+                            <p>We wanted to inform you that your account has been reported by another user.</p>
+                            <p><strong>Reason:</strong> {reason}</p>
+                            {(!string.IsNullOrWhiteSpace(description) ? $"<p><strong>Details:</strong> {System.Net.WebUtility.HtmlEncode(description)}</p>" : "")}
+                            <p>Our moderation team will review this report. If any violations of our community guidelines are found, appropriate action may be taken.</p>
+                            <p>If you believe this report was made in error, please contact our support team.</p>
+                            <p>Best regards,<br>The TanuiApp Team</p>
+                        </body>
+                        </html>";
+                    await _emailSender.SendEmailAsync(reportedUser.Email, emailSubject, emailBody);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send report notification email to user {UserId}", reportedUser.Id);
+                }
+            }
 
             TempData["Success"] = "Thanks for your report. Our team will review it shortly.";
             return RedirectToAction(nameof(ViewProfile), new { id });

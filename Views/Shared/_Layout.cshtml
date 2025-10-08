@@ -232,5 +232,84 @@
         <partial name="_AskAIWidget" />
     }
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; min-width: 300px;"></div>
+
+    <script>
+        // Global Toast Notification System
+        window.showNotificationToast = function(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toastId = 'toast-' + Date.now();
+            const iconMap = {
+                'success': 'bi-check-circle-fill text-success',
+                'error': 'bi-x-circle-fill text-danger',
+                'warning': 'bi-exclamation-triangle-fill text-warning',
+                'info': 'bi-info-circle-fill text-info'
+            };
+            const bgMap = {
+                'success': 'bg-success',
+                'error': 'bg-danger',
+                'warning': 'bg-warning',
+                'info': 'bg-info'
+            };
+
+            const icon = iconMap[type] || iconMap['info'];
+            const bgColor = bgMap[type] || bgMap['info'];
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = 'toast show mb-2';
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="toast-header ${bgColor} text-white">
+                    <i class="bi ${icon} me-2"></i>
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('${toastId}').remove()"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after duration
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.3s';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, duration);
+        };
+
+        // Enhanced SignalR to show toast notifications
+        (function(){
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js';
+            s.onload = () => {
+                const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/notifications').withAutomaticReconnect().build();
+                conn.on('Notify', (title, body) => {
+                    const current = parseInt(badge.textContent || '0');
+                    const next = current + 1;
+                    badge.textContent = String(next);
+                    badge.classList.remove('d-none');
+                    
+                    // Show toast notification
+                    const message = title + (body ? ': ' + body : '');
+                    window.showNotificationToast(message, 'info', 3000);
+                });
+                conn.start().catch(console.error);
+            };
+            document.head.appendChild(s);
+        })();
+    </script>
+
 </body>
 </html>

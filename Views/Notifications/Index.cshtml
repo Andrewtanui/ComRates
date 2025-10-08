@@ -1,40 +1,240 @@
-@model IEnumerable<TanuiApp.Models.Notification>
+@model IEnumerable<TanuiApp.ViewModels.GroupedNotificationsViewModel>
 
 @{
     ViewData["Title"] = "Notifications";
+    var currentCategory = ViewBag.CurrentCategory as string ?? "all";
+    var unreadCounts = ViewBag.UnreadCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
+    var totalNotifications = Model.Sum(g => g.Notifications.Count);
 }
 
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="fw-bold">Notifications</h2>
-        <form asp-action="MarkAllRead" method="post">
-            <button type="submit" class="btn btn-outline-secondary btn-sm">Mark all as read</button>
-        </form>
+        <div>
+            <form asp-action="MarkAllRead" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Mark all as read</button>
+            </form>
+            <button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="deleteAllNotifications()">Delete All</button>
+        </div>
     </div>
 
-    @if (!Model.Any())
+    <!-- Category Filter Tabs -->
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "all" ? "active" : "")" 
+               asp-action="Index" asp-route-category="all">
+                All 
+                @if (unreadCounts.ContainsKey("all") && unreadCounts["all"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["all"]</span>
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "message" ? "active" : "")" 
+               asp-action="Index" asp-route-category="message">
+                <i class="bi bi-chat-dots"></i> Messages
+                @if (unreadCounts.ContainsKey("message") && unreadCounts["message"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["message"]</span>
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "order" ? "active" : "")" 
+               asp-action="Index" asp-route-category="order">
+                <i class="bi bi-cart"></i> Orders
+                @if (unreadCounts.ContainsKey("order") && unreadCounts["order"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["order"]</span>
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "delivery" ? "active" : "")" 
+               asp-action="Index" asp-route-category="delivery">
+                <i class="bi bi-truck"></i> Delivery
+                @if (unreadCounts.ContainsKey("delivery") && unreadCounts["delivery"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["delivery"]</span>
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "report" ? "active" : "")" 
+               asp-action="Index" asp-route-category="report">
+                <i class="bi bi-flag"></i> Reports
+                @if (unreadCounts.ContainsKey("report") && unreadCounts["report"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["report"]</span>
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentCategory == "admin" ? "active" : "")" 
+               asp-action="Index" asp-route-category="admin">
+                <i class="bi bi-shield-check"></i> Admin
+                @if (unreadCounts.ContainsKey("admin") && unreadCounts["admin"] > 0)
+                {
+                    <span class="badge bg-danger ms-1">@unreadCounts["admin"]</span>
+                }
+            </a>
+        </li>
+    </ul>
+
+    @if (totalNotifications == 0)
     {
-        <div class="alert alert-info">You're all caught up.</div>
-    }
-    else
-    {
-        <div class="list-group">
-            @foreach (var n in Model)
+        <div class="alert alert-info">
+            @if (currentCategory == "all")
             {
-                <a class="list-group-item list-group-item-action d-flex justify-content-between @(n.IsRead ? "" : "list-group-item-warning")" href="@(n.Link ?? "#")">
-                    <div>
-                        <div class="fw-semibold">@n.Title</div>
-                        @if (!string.IsNullOrEmpty(n.Body))
-                        {
-                            <small class="text-muted">@n.Body</small>
-                        }
-                    </div>
-                    <small class="text-muted">@n.CreatedAt.ToString("g")</small>
-                </a>
+                <text>You're all caught up.</text>
+            }
+            else
+            {
+                <text>No @currentCategory notifications.</text>
             }
         </div>
     }
+    else
+    {
+        @foreach (var group in Model)
+        {
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">@group.DateGroup</h5>
+                <div class="list-group">
+                    @foreach (var n in group.Notifications)
+                    {
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start @(n.IsRead ? "" : "list-group-item-warning")" data-notification-id="@n.Id">
+                            <a href="@(n.Link ?? "#")" class="flex-grow-1 text-decoration-none text-dark">
+                                <div class="d-flex align-items-center mb-1">
+                                    @switch (n.Type.ToLower())
+                                    {
+                                        case "message":
+                                            <i class="bi bi-chat-dots text-primary me-2"></i>
+                                            break;
+                                        case "order":
+                                            <i class="bi bi-cart text-success me-2"></i>
+                                            break;
+                                        case "delivery":
+                                            <i class="bi bi-truck text-info me-2"></i>
+                                            break;
+                                        case "report":
+                                            <i class="bi bi-flag text-warning me-2"></i>
+                                            break;
+                                        case "admin":
+                                            <i class="bi bi-shield-check text-danger me-2"></i>
+                                            break;
+                                        default:
+                                            <i class="bi bi-bell text-secondary me-2"></i>
+                                            break;
+                                    }
+                                    <span class="fw-semibold">@n.Title</span>
+                                    @if (!n.IsRead)
+                                    {
+                                        <span class="badge bg-primary ms-2">New</span>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(n.Body))
+                                {
+                                    <small class="text-muted d-block">@n.Body</small>
+                                }
+                                <small class="text-muted">@n.CreatedAt.ToString("h:mm tt")</small>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-3" onclick="deleteNotification(@n.Id, event)" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
 </div>
+
+@section Scripts {
+<script>
+    async function deleteNotification(id, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (!confirm('Delete this notification?')) return;
+        
+        try {
+            const response = await fetch('/Notifications/Delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${id}`
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                const element = document.querySelector(`[data-notification-id="${id}"]`);
+                if (element) {
+                    element.style.transition = 'opacity 0.3s';
+                    element.style.opacity = '0';
+                    setTimeout(() => {
+                        element.remove();
+                        // Check if date group is empty
+                        const dateGroup = element.closest('.mb-4');
+                        if (dateGroup && dateGroup.querySelectorAll('.list-group-item').length === 0) {
+                            dateGroup.remove();
+                        }
+                        // Check if all notifications are gone
+                        if (document.querySelectorAll('.list-group-item').length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                }
+                showToast('Notification deleted', 'success');
+            } else {
+                showToast('Failed to delete notification', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred', 'error');
+        }
+    }
+    
+    async function deleteAllNotifications() {
+        const category = '@currentCategory';
+        const confirmMsg = category === 'all' 
+            ? 'Delete all notifications?' 
+            : `Delete all ${category} notifications?`;
+            
+        if (!confirm(confirmMsg)) return;
+        
+        try {
+            const response = await fetch('/Notifications/DeleteAll', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `category=${category}`
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Failed to delete notifications', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred', 'error');
+        }
+    }
+    
+    function showToast(message, type) {
+        // This will be handled by the global toast system
+        if (window.showNotificationToast) {
+            window.showNotificationToast(message, type);
+        }
+    }
+</script>
+}
 
 
 

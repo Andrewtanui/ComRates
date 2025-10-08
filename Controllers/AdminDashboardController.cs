@@ -254,6 +254,36 @@ namespace TanuiApp.Controllers
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
+            // Send email to restored user
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                try
+                {
+                    var emailBody = $@"
+                        <html>
+                        <body style='font-family: Arial, sans-serif;'>
+                            <h2 style='color: #28a745;'>Account Restored</h2>
+                            <p>Dear {user.FullName},</p>
+                            <p>Good news! Your account suspension has been lifted.</p>
+                            <p><strong>What this means:</strong></p>
+                            <ul>
+                                <li>Your account is now fully active</li>
+                                <li>All {userProducts.Count} of your product listings are visible again</li>
+                                <li>You can continue buying and selling on our platform</li>
+                            </ul>
+                            <p>We appreciate your cooperation and look forward to your continued participation in our community.</p>
+                            <p>Best regards,<br>The TanuiApp Team</p>
+                        </body>
+                        </html>";
+                    await _emailSender.SendEmailAsync(user.Email, "Account Restored - Welcome Back!", emailBody);
+                    _logger.LogInformation("Sent restoration email to user {UserId} at {Email}", userId, user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send restoration email to user {UserId}", userId);
+                }
+            }
+
             return Json(new { success = true, message = "User unsuspended successfully" });
         }
 
@@ -403,7 +433,7 @@ namespace TanuiApp.Controllers
                     UserId = report.ReporterId,
                     Title = "Report Reviewed",
                     Body = $"Your report regarding user {report.ReportedUserId} has been reviewed. Notes: {adminNotes}",
-                    Type = "admin",
+                    Type = "report",
                     CreatedAt = DateTime.Now
                 };
                 _context.Notifications.Add(notify);
@@ -460,7 +490,7 @@ namespace TanuiApp.Controllers
                     UserId = rep.Id,
                     Title = $"Report Update: User {action}",
                     Body = notificationBody,
-                    Type = "admin",
+                    Type = "report",
                     CreatedAt = DateTime.Now
                 };
                 _context.Notifications.Add(n);
