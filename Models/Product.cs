@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -59,7 +59,6 @@ namespace TanuiApp.Models
         [Display(Name = "Sale End Date")]
         public DateTime? SaleEndDate { get; set; }
 
-        [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public double Rating { get; set; } = 0;
 
         [Required]
@@ -67,6 +66,9 @@ namespace TanuiApp.Models
 
         [Display(Name = "Created Date")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [Display(Name = "Active")]
+        public bool IsActive { get; set; } = true;
 
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

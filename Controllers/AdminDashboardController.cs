@@ -174,19 +174,44 @@ namespace TanuiApp.Controllers
 
             await _userManager.UpdateAsync(user);
 
+            // Suspend all user's products (hide from marketplace)
+            var userProducts = await _context.Products.Where(p => p.UserId == userId).ToListAsync();
+            foreach (var product in userProducts)
+            {
+                product.IsActive = false;
+            }
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Suspended {ProductCount} products for user {UserId}", userProducts.Count, userId);
+
             // Notify user
             var notification = new Notification
             {
                 UserId = userId,
                 Title = "Account Suspended",
-                Body = $"Your account has been suspended. Reason: {reason}",
+                Body = $"Your account has been suspended. Reason: {reason}. All your product listings have been hidden.",
                 Type = "admin",
                 CreatedAt = DateTime.Now
             };
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
-            // Notify all reporters of this user (email placeholder)
+            // Send email to suspended user
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                try
+                {
+                    var emailBody = GenerateSuspendedUserEmailHtml(user.FullName, reason, userProducts.Count);
+                    await _emailSender.SendEmailAsync(user.Email, "Account Suspended - Action Required", emailBody);
+                    _logger.LogInformation("Sent suspension email to user {UserId} at {Email}", userId, user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send suspension email to user {UserId}", userId);
+                }
+            }
+
+            // Notify all reporters of this user
             await NotifyReportersAsync(userId, "Suspended", reason);
 
             return Json(new { success = true, message = "User suspended successfully" });
@@ -207,12 +232,22 @@ namespace TanuiApp.Controllers
 
             await _userManager.UpdateAsync(user);
 
+            // Reactivate all user's products
+            var userProducts = await _context.Products.Where(p => p.UserId == userId).ToListAsync();
+            foreach (var product in userProducts)
+            {
+                product.IsActive = true;
+            }
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Reactivated {ProductCount} products for user {UserId}", userProducts.Count, userId);
+
             // Notify user
             var notification = new Notification
             {
                 UserId = userId,
                 Title = "Account Restored",
-                Body = "Your account suspension has been lifted. Welcome back!",
+                Body = "Your account suspension has been lifted. Your product listings are now visible again. Welcome back!",
                 Type = "admin",
                 CreatedAt = DateTime.Now
             };
@@ -238,22 +273,84 @@ namespace TanuiApp.Controllers
 
             await _userManager.UpdateAsync(user);
 
-            // Notify user
+            // Deactivate all user's products permanently
+            var userProducts = await _context.Products.Where(p => p.UserId == userId).ToListAsync();
+            var productIds = userProducts.Select(p => p.Id).ToList();
+            foreach (var product in userProducts)
+            {
+                product.IsActive = false;
+            }
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Deactivated {ProductCount} products for banned user {UserId}", userProducts.Count, userId);
+
+            // Process refunds for pending/in-transit orders containing banned user's products
+            var affectedOrders = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.Items.Any(oi => productIds.Contains(oi.ProductId)) 
+                         && (o.Status == "Pending" || o.Status == "Paid")
+                         && (o.DeliveryStatus == "Preparing" || o.DeliveryStatus == "Packed" || o.DeliveryStatus == "InTransit"))
+                .ToListAsync();
+
+            int refundedOrdersCount = 0;
+            foreach (var order in affectedOrders)
+            {
+                // Mark order as refunded/cancelled
+                order.Status = "Refunded";
+                order.DeliveryStatus = "Cancelled";
+
+                // Notify buyer about refund
+                var buyerNotification = new Notification
+                {
+                    UserId = order.UserId,
+                    Title = "Order Refunded - Seller Account Banned",
+                    Body = $"Your order #{order.Id} has been refunded because the seller's account was permanently banned. Amount: ${order.TotalAmount:F2}. The refund will be processed within 3-5 business days.",
+                    Type = "admin",
+                    CreatedAt = DateTime.Now
+                };
+                _context.Notifications.Add(buyerNotification);
+
+                refundedOrdersCount++;
+                _logger.LogInformation("Refunded order {OrderId} for buyer {BuyerId} due to banned seller {SellerId}", order.Id, order.UserId, userId);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Notify banned user
             var notification = new Notification
             {
                 UserId = userId,
                 Title = "Account Banned",
-                Body = $"Your account has been permanently banned. Reason: {reason}. This email can no longer be used.",
+                Body = $"Your account has been permanently banned. Reason: {reason}. All your listings have been removed and pending orders have been refunded.",
                 Type = "admin",
                 CreatedAt = DateTime.Now
             };
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
-            // Notify all reporters of this user (email placeholder)
+            // Send email to banned user
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                try
+                {
+                    var emailBody = GenerateBannedUserEmailHtml(user.FullName, reason, userProducts.Count, refundedOrdersCount);
+                    await _emailSender.SendEmailAsync(user.Email, "Account Permanently Banned - Final Notice", emailBody);
+                    _logger.LogInformation("Sent ban email to user {UserId} at {Email}", userId, user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send ban email to user {UserId}", userId);
+                }
+            }
+
+            // Notify all reporters of this user
             await NotifyReportersAsync(userId, "Banned", reason);
 
-            return Json(new { success = true, message = "User banned successfully" });
+            _logger.LogInformation("Banned user {UserId}. Deactivated {ProductCount} products and refunded {OrderCount} orders", 
+                userId, userProducts.Count, refundedOrdersCount);
+
+            return Json(new { success = true, message = $"User banned successfully. {refundedOrdersCount} orders refunded." });
         }
 
         [HttpPost]
@@ -673,6 +770,224 @@ namespace TanuiApp.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = "Company deleted.";
             return RedirectToAction("DeliveryCompanies");
+        }
+
+        // Email templates for suspended/banned users
+        private string GenerateSuspendedUserEmailHtml(string userName, string reason, int productCount)
+        {
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }}
+        .container {{ max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+        .header {{ background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 28px; font-weight: 600; }}
+        .header p {{ margin: 10px 0 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ padding: 40px 30px; color: #333; line-height: 1.8; }}
+        .content h2 {{ color: #ff9800; font-size: 22px; margin-top: 0; margin-bottom: 20px; }}
+        .content p {{ margin: 15px 0; font-size: 15px; }}
+        .alert-box {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 25px 0; border-radius: 6px; }}
+        .alert-box strong {{ color: #856404; font-size: 16px; }}
+        .alert-box p {{ margin: 10px 0 0; color: #856404; font-size: 15px; }}
+        .info-section {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; }}
+        .info-section h3 {{ margin: 0 0 15px; color: #495057; font-size: 18px; }}
+        .info-section ul {{ margin: 10px 0; padding-left: 20px; }}
+        .info-section li {{ margin: 8px 0; color: #6c757d; }}
+        .stats {{ background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; }}
+        .stats strong {{ color: #856404; font-size: 18px; }}
+        .footer {{ background: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 13px; border-top: 1px solid #e9ecef; }}
+        .footer p {{ margin: 8px 0; }}
+        .badge {{ display: inline-block; padding: 8px 16px; background: #ffc107; color: #333; border-radius: 20px; font-size: 14px; font-weight: 600; margin: 15px 0; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>⚠️ Account Suspended</h1>
+            <p>Important notice regarding your ComRates account</p>
+        </div>
+        <div class='content'>
+            <h2>Dear {System.Net.WebUtility.HtmlEncode(userName)},</h2>
+            <p>We are writing to inform you that your ComRates account has been temporarily suspended following a review by our Trust & Safety team. This decision was made after careful consideration of reports received and our investigation into your account activity.</p>
+            
+            <div class='badge'>⏸️ Account Suspended</div>
+            
+            <div class='alert-box'>
+                <strong>📋 Suspension Reason:</strong>
+                <p>{System.Net.WebUtility.HtmlEncode(reason)}</p>
+            </div>
+            
+            <div class='stats'>
+                <strong>{productCount}</strong> product listing{(productCount != 1 ? "s have" : " has")} been hidden from the marketplace
+            </div>
+            
+            <div class='info-section'>
+                <h3>What This Means for Your Account:</h3>
+                <ul>
+                    <li><strong>Account Access:</strong> You can still log in to your account but with limited functionality. You cannot create new listings, make purchases, or send messages to other users.</li>
+                    <li><strong>Product Listings:</strong> All {productCount} of your product listing{(productCount != 1 ? "s are" : " is")} currently hidden from public view and cannot be purchased by buyers.</li>
+                    <li><strong>Pending Transactions:</strong> Any ongoing transactions will continue to be processed. Please fulfill any existing orders to maintain your seller reputation.</li>
+                    <li><strong>Account Review:</strong> Our moderation team is conducting a comprehensive review of your account. This process typically takes 3-7 business days.</li>
+                    <li><strong>Communication:</strong> You will receive updates via email regarding the status of your account review.</li>
+                </ul>
+            </div>
+            
+            <div class='info-section'>
+                <h3>Next Steps & Appeal Process:</h3>
+                <p>If you believe this suspension was made in error or you would like to provide additional context about your account activity, you have the right to appeal this decision. To submit an appeal:</p>
+                <ul>
+                    <li>Reply to this email with a detailed explanation of your situation</li>
+                    <li>Include any relevant evidence or documentation that supports your case</li>
+                    <li>Our appeals team will review your submission within 5 business days</li>
+                    <li>You will receive a final decision via email</li>
+                </ul>
+                <p>Please note that submitting an appeal does not guarantee reinstatement. All decisions are made based on our Community Guidelines and Terms of Service.</p>
+            </div>
+            
+            <div class='info-section'>
+                <h3>Understanding Our Community Standards:</h3>
+                <p>ComRates is committed to maintaining a safe, trustworthy marketplace for all users. Account suspensions are issued when we identify behavior that violates our policies, including but not limited to:</p>
+                <ul>
+                    <li>Fraudulent or deceptive practices</li>
+                    <li>Harassment or abusive behavior toward other users</li>
+                    <li>Listing prohibited or counterfeit items</li>
+                    <li>Manipulation of reviews or ratings</li>
+                    <li>Violation of intellectual property rights</li>
+                    <li>Failure to fulfill orders or provide accurate product descriptions</li>
+                </ul>
+            </div>
+            
+            <p><strong>Important Reminder:</strong> During the suspension period, please refrain from creating new accounts or attempting to circumvent this suspension. Such actions will result in permanent account termination and may affect your ability to use ComRates in the future.</p>
+            
+            <p>We understand that account suspensions can be frustrating. Our goal is to ensure a fair and safe marketplace for everyone. If you have questions about this suspension or need clarification on our policies, please don't hesitate to contact our support team.</p>
+            
+            <p style='margin-top: 30px;'>Sincerely,<br><strong>ComRates Trust & Safety Team</strong></p>
+        </div>
+        <div class='footer'>
+            <p><strong>ComRates Marketplace</strong></p>
+            <p>For questions or appeals, reply to this email or contact support@comrates.com</p>
+            <p>© 2025 ComRates. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+        }
+
+        private string GenerateBannedUserEmailHtml(string userName, string reason, int productCount, int refundedOrders)
+        {
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }}
+        .container {{ max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+        .header {{ background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%); color: white; padding: 40px 30px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 28px; font-weight: 600; }}
+        .header p {{ margin: 10px 0 0; font-size: 16px; opacity: 0.95; }}
+        .content {{ padding: 40px 30px; color: #333; line-height: 1.8; }}
+        .content h2 {{ color: #dc3545; font-size: 22px; margin-top: 0; margin-bottom: 20px; }}
+        .content p {{ margin: 15px 0; font-size: 15px; }}
+        .alert-box {{ background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; margin: 25px 0; border-radius: 6px; }}
+        .alert-box strong {{ color: #721c24; font-size: 16px; }}
+        .alert-box p {{ margin: 10px 0 0; color: #721c24; font-size: 15px; }}
+        .info-section {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; }}
+        .info-section h3 {{ margin: 0 0 15px; color: #495057; font-size: 18px; }}
+        .info-section ul {{ margin: 10px 0; padding-left: 20px; }}
+        .info-section li {{ margin: 8px 0; color: #6c757d; }}
+        .stats {{ background: #f8d7da; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; }}
+        .stats strong {{ color: #721c24; font-size: 18px; }}
+        .footer {{ background: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 13px; border-top: 1px solid #e9ecef; }}
+        .footer p {{ margin: 8px 0; }}
+        .badge {{ display: inline-block; padding: 8px 16px; background: #dc3545; color: white; border-radius: 20px; font-size: 14px; font-weight: 600; margin: 15px 0; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>🚫 Account Permanently Banned</h1>
+            <p>Final notice regarding your ComRates account</p>
+        </div>
+        <div class='content'>
+            <h2>Dear {System.Net.WebUtility.HtmlEncode(userName)},</h2>
+            <p>This is to inform you that your ComRates account has been <strong>permanently banned</strong> effective immediately. This decision was made by our Trust & Safety team following a thorough investigation into serious violations of our Community Guidelines and Terms of Service.</p>
+            
+            <div class='badge'>⛔ Permanently Banned</div>
+            
+            <div class='alert-box'>
+                <strong>📋 Ban Reason:</strong>
+                <p>{System.Net.WebUtility.HtmlEncode(reason)}</p>
+            </div>
+            
+            <div class='stats'>
+                <strong>{productCount}</strong> product{(productCount != 1 ? "s" : "")} removed • <strong>{refundedOrders}</strong> order{(refundedOrders != 1 ? "s" : "")} refunded
+            </div>
+            
+            <div class='info-section'>
+                <h3>What This Ban Means:</h3>
+                <ul>
+                    <li><strong>Account Termination:</strong> Your ComRates account has been permanently closed and cannot be reinstated under any circumstances.</li>
+                    <li><strong>Access Revoked:</strong> You are immediately prohibited from accessing the ComRates platform. Any attempt to log in will be denied.</li>
+                    <li><strong>All Listings Removed:</strong> Your {productCount} product listing{(productCount != 1 ? "s have" : " has")} been permanently removed from the marketplace and cannot be recovered.</li>
+                    <li><strong>Orders Refunded:</strong> {refundedOrders} pending order{(refundedOrders != 1 ? "s have" : " has")} been automatically cancelled and refunded to the buyers. Affected customers have been notified.</li>
+                    <li><strong>Email Blacklisted:</strong> The email address associated with this account has been permanently blacklisted and cannot be used to create a new ComRates account.</li>
+                    <li><strong>Payment Methods Blocked:</strong> Any payment methods linked to your account have been flagged to prevent circumvention of this ban.</li>
+                    <li><strong>No Appeal Available:</strong> This decision is final and not subject to appeal. We will not respond to requests for reinstatement.</li>
+                </ul>
+            </div>
+            
+            <div class='info-section'>
+                <h3>Why Permanent Bans Are Issued:</h3>
+                <p>ComRates maintains a zero-tolerance policy for severe violations that compromise the safety, trust, and integrity of our marketplace community. Permanent bans are reserved for the most serious offenses, including:</p>
+                <ul>
+                    <li>Fraudulent transactions or scam operations</li>
+                    <li>Repeated harassment, threats, or abusive behavior</li>
+                    <li>Sale of illegal, dangerous, or prohibited items</li>
+                    <li>Identity theft or impersonation</li>
+                    <li>Systematic manipulation of the platform (reviews, ratings, pricing)</li>
+                    <li>Multiple policy violations despite previous warnings</li>
+                    <li>Circumvention of previous suspensions or bans</li>
+                </ul>
+                <p>These violations not only breach our Terms of Service but also harm other users and undermine the trust that is essential to a functioning marketplace.</p>
+            </div>
+            
+            <div class='info-section'>
+                <h3>Legal Considerations:</h3>
+                <p>Please be advised that in cases involving fraud, illegal activity, or significant financial harm to other users, ComRates reserves the right to:</p>
+                <ul>
+                    <li>Report relevant information to law enforcement authorities</li>
+                    <li>Cooperate with legal investigations and provide evidence as required by law</li>
+                    <li>Pursue civil or criminal action to recover damages or enforce our rights</li>
+                    <li>Share information with other platforms to prevent further fraudulent activity</li>
+                </ul>
+            </div>
+            
+            <div class='info-section'>
+                <h3>Important Warnings:</h3>
+                <p><strong>Do Not Attempt to Circumvent This Ban:</strong> Creating new accounts, using different email addresses, or employing any method to bypass this permanent ban will result in immediate termination of those accounts and may lead to legal action. Our fraud detection systems are designed to identify and prevent such attempts.</p>
+                <p><strong>Outstanding Financial Obligations:</strong> If you have any outstanding financial obligations to ComRates or to buyers (such as unfulfilled orders or disputed transactions), you remain legally responsible for resolving these matters despite the account ban.</p>
+            </div>
+            
+            <p><strong>Final Statement:</strong> We do not take the decision to permanently ban accounts lightly. This action was necessary to protect our community and maintain the integrity of the ComRates marketplace. We wish you well in your future endeavors, but you are no longer welcome on our platform.</p>
+            
+            <p>If you have urgent questions regarding outstanding financial matters or legal obligations related to this ban, you may contact our legal department at legal@comrates.com. Please note that we will not respond to appeals or requests for account reinstatement.</p>
+            
+            <p style='margin-top: 30px;'>ComRates Trust & Safety Team</p>
+        </div>
+        <div class='footer'>
+            <p><strong>ComRates Marketplace</strong></p>
+            <p>This is a final notice. Your account has been permanently terminated.</p>
+            <p>© 2025 ComRates. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
         }
     }
 }

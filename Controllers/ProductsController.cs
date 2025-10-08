@@ -30,6 +30,7 @@ namespace TanuiApp.Controllers
         public async Task<IActionResult> Index(string searchQuery)
         {
             var products = from p in _context.Products.Include(p => p.User)
+                           where p.IsActive
                            select p;
 
             if (!string.IsNullOrEmpty(searchQuery))
@@ -49,6 +50,7 @@ namespace TanuiApp.Controllers
         {
             var products = _context.Products
                 .Include(p => p.User)
+                .Where(p => p.IsActive)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query))
@@ -79,7 +81,7 @@ namespace TanuiApp.Controllers
 
             var products = await _context.Products
                 .Include(p => p.User)
-                .Where(p => p.Category.ToLower() == selectedLower)
+                .Where(p => p.IsActive && p.Category.ToLower() == selectedLower)
                 .AsNoTracking()
                 .ToListAsync();
 
