@@ -44,9 +44,22 @@
                                         }
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-warning me-1" data-action="suspend" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Suspend</button>
-                                        <button class="btn btn-sm btn-outline-primary me-1" data-action="review" data-report-id="@r.Id" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Review</button>
-                                        <button class="btn btn-sm btn-outline-danger" data-action="ban" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Ban</button>
+                                        @if (r.ReportedUser?.IsBanned == true)
+                                        {
+                                            <span class="badge bg-danger">Banned</span>
+                                        }
+                                        else if (r.ReportedUser?.IsSuspended == true)
+                                        {
+                                            <button class="btn btn-sm btn-outline-success me-1" data-action="unsuspend" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Unsuspend</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1" data-action="review" data-report-id="@r.Id" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Review</button>
+                                            <button class="btn btn-sm btn-outline-danger" data-action="ban" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Ban</button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-warning me-1" data-action="suspend" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Suspend</button>
+                                            <button class="btn btn-sm btn-outline-primary me-1" data-action="review" data-report-id="@r.Id" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Review</button>
+                                            <button class="btn btn-sm btn-outline-danger" data-action="ban" data-user-id="@r.ReportedUserId" data-user-name="@(r.ReportedUser?.FullName ?? r.ReportedUserId)">Ban</button>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -178,6 +191,25 @@
         document.getElementById('suspendUserName').value = userName;
         document.getElementById('suspendReason').value = '';
         suspendModal.show();
+      } else if (action === 'unsuspend') {
+        const userId = btn.getAttribute('data-user-id');
+        const userName = btn.getAttribute('data-user-name');
+        console.log('Unsuspend user:', userId, userName);
+        
+        if (!confirm(`Unsuspend ${userName}? Their account will be restored and products reactivated.`)) return;
+        
+        btn.disabled = true;
+        btn.textContent = 'Unsuspending...';
+        
+        postJson('/AdminDashboard/UnsuspendUser', { userId }).then(result => {
+          if (result.success) {
+            location.reload();
+          } else {
+            alert(result.message || 'Failed to unsuspend user');
+            btn.disabled = false;
+            btn.textContent = 'Unsuspend';
+          }
+        });
       } else if (action === 'ban') {
         const userId = btn.getAttribute('data-user-id');
         const userName = btn.getAttribute('data-user-name');

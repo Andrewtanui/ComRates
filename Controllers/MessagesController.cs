@@ -55,9 +55,84 @@ namespace TanuiApp.Controllers
 
             var userId = _userManager.GetUserId(User);
             var user = await _userManager.FindByIdAsync(userId);
-            var (text, links) = await _chatbot.GetBotReplyWithLinksAsync(prompt, user?.FullName);
+            var (text, links) = await _chatbot.GetBotReplyWithLinksAsync(prompt, user?.FullName, userId);
             var linkDtos = links.Select(l => new { text = l.text, url = Url.Content(l.url) }).ToList();
             return Json(new { ok = true, reply = text, links = linkDtos });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChatHistory()
+        {
+            var userId = _userManager.GetUserId(User);
+            var history = await _chatbot.GetUserConversationHistoryAsync(userId, 20);
+            return View(history);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProvideChatbotFeedback(int conversationId, bool wasHelpful, string? feedback)
+        {
+            var success = await _chatbot.ProvideFeedbackAsync(conversationId, wasHelpful, feedback);
+            return Json(new { success });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ContactSupport(string? reason)
+        {
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+            var admin = await _context.Users
+                .Where(u => u.UserRole == UserRole.SystemAdmin)
+                .OrderBy(u => u.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (admin == null)
+            {
+                TempData["Error"] = "Support is currently unavailable. Please try again later.";
+                return RedirectToAction(nameof(Inbox));
+            }
+
+            // Build thread and create a greeting message if no thread exists
+            var threadKey = BuildThreadKey(userId, admin.Id, null);
+            var hasThread = await _context.Messages.AnyAsync(m => m.ThreadKey == threadKey);
+
+            if (!hasThread)
+            {
+                // Customize message based on reason
+                string messageContent = "Hello, I need help from support.";
+                string notificationBody = "A user has started a support chat.";
+
+                if (reason == "seller-upgrade" && user?.UserRole == UserRole.Buyer)
+                {
+                    messageContent = "Hello, I would like to request an upgrade to a Seller account. I want to start selling products on ComRates.";
+                    notificationBody = $"{user.FullName} is requesting a Seller account upgrade.";
+                }
+
+                var intro = new Message
+                {
+                    SenderId = userId,
+                    RecipientId = admin.Id,
+                    Content = messageContent,
+                    ProductId = null,
+                    ThreadKey = threadKey
+                };
+                _context.Messages.Add(intro);
+                await _context.SaveChangesAsync();
+
+                // Notify admin
+                var notification = new Notification
+                {
+                    UserId = admin.Id,
+                    Type = "message",
+                    Title = "New support request",
+                    Body = notificationBody,
+                    Link = Url.Action("Chat", "Messages", new { withUserId = userId }, Request.Scheme)
+                };
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Chat), new { withUserId = admin.Id });
         }
 
         public async Task<IActionResult> Chat(string? withUserId, int? productId)

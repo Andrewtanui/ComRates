@@ -18,6 +18,8 @@ namespace TanuiApp.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<DeliveryCompany> DeliveryCompanies { get; set; }
+        public DbSet<ChatbotConversation> ChatbotConversations { get; set; }
+        public DbSet<ChatbotTrainingData> ChatbotTrainingData { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -106,6 +108,30 @@ namespace TanuiApp.Data
                 .WithMany()
                 .HasForeignKey(u => u.DeliveryCompanyId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // ChatbotConversation relationships
+            builder.Entity<ChatbotConversation>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ChatbotConversation>()
+                .HasIndex(c => c.SessionId);
+
+            builder.Entity<ChatbotConversation>()
+                .HasIndex(c => new { c.UserId, c.CreatedAt });
+
+            builder.Entity<ChatbotConversation>()
+                .Property(c => c.ConfidenceScore)
+                .HasColumnType("decimal(5,4)");
+
+            // ChatbotTrainingData indexes
+            builder.Entity<ChatbotTrainingData>()
+                .HasIndex(t => t.Intent);
+
+            builder.Entity<ChatbotTrainingData>()
+                .HasIndex(t => t.IsActive);
         }
     }
 }

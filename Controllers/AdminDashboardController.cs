@@ -32,6 +32,79 @@ namespace TanuiApp.Controllers
             _emailSender = emailSender;
         }
 
+        // Upgrade a Buyer to a Seller upon request/approval
+        [HttpPost]
+        public async Task<IActionResult> UpgradeBuyerToSeller(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Json(new { success = false, message = "Invalid user id" });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User not found" });
+            }
+
+            if (user.UserRole == UserRole.Seller)
+            {
+                return Json(new { success = true, message = "User is already a seller" });
+            }
+
+            // Only allow upgrading from Buyer to Seller
+            if (user.UserRole != UserRole.Buyer)
+            {
+                return Json(new { success = false, message = "Only buyers can be upgraded to sellers" });
+            }
+
+            user.UserRole = UserRole.Seller;
+            await _userManager.UpdateAsync(user);
+
+            // Sync Identity roles if used
+            try
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Buyer");
+            }
+            catch { /* ignore if not in role */ }
+            try
+            {
+                await _userManager.AddToRoleAsync(user, "Seller");
+            }
+            catch { /* ignore if roles not configured */ }
+
+            // Notify user
+            var notification = new Notification
+            {
+                UserId = user.Id,
+                Title = "Seller Upgrade Approved",
+                Body = "Your account has been upgraded to a Seller. You can now list and manage products from your Seller Dashboard.",
+                Type = "admin",
+                CreatedAt = DateTime.Now
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // Send email (best-effort)
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                try
+                {
+                    var emailBody = $@"<p>Hi {System.Net.WebUtility.HtmlEncode(user.FullName)},</p>
+                        <p>Your request to become a seller has been approved. You can now access your seller tools and list products for sale.</p>
+                        <p>Visit your <strong>Seller Dashboard</strong> to get started.</p>
+                        <p>— ComRates Team</p>";
+                    await _emailSender.SendEmailAsync(user.Email, "Seller Upgrade Approved", emailBody);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send seller upgrade email to user {UserId}", user.Id);
+                }
+            }
+
+            return Json(new { success = true, message = "Buyer upgraded to Seller successfully" });
+        }
+
         public async Task<IActionResult> Index()
         {
             var viewModel = new AdminDashboardViewModel();
@@ -172,6 +245,8 @@ namespace TanuiApp.Controllers
             user.SuspendedAt = DateTime.Now;
             user.SuspensionReason = reason;
 
+            // Update security stamp to invalidate all existing sessions/cookies
+            await _userManager.UpdateSecurityStampAsync(user);
             await _userManager.UpdateAsync(user);
 
             // Suspend all user's products (hide from marketplace)
@@ -230,6 +305,8 @@ namespace TanuiApp.Controllers
             user.SuspendedAt = null;
             user.SuspensionReason = null;
 
+            // Update security stamp to allow user to log in again
+            await _userManager.UpdateSecurityStampAsync(user);
             await _userManager.UpdateAsync(user);
 
             // Reactivate all user's products
@@ -301,6 +378,8 @@ namespace TanuiApp.Controllers
             user.BanReason = reason;
             user.IsSuspended = true; // Also suspend
 
+            // Update security stamp to invalidate all existing sessions/cookies
+            await _userManager.UpdateSecurityStampAsync(user);
             await _userManager.UpdateAsync(user);
 
             // Deactivate all user's products permanently
@@ -364,14 +443,19 @@ namespace TanuiApp.Controllers
             {
                 try
                 {
+                    _logger.LogInformation("Attempting to send ban notification email to banned user {UserId} at {Email}", userId, user.Email);
                     var emailBody = GenerateBannedUserEmailHtml(user.FullName, reason, userProducts.Count, refundedOrdersCount);
                     await _emailSender.SendEmailAsync(user.Email, "Account Permanently Banned - Final Notice", emailBody);
-                    _logger.LogInformation("Sent ban email to user {UserId} at {Email}", userId, user.Email);
+                    _logger.LogInformation("✓ Successfully sent ban notification email to banned user {UserId} at {Email}", userId, user.Email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to send ban email to user {UserId}", userId);
+                    _logger.LogError(ex, "✗ Failed to send ban notification email to banned user {UserId} at {Email}", userId, user.Email);
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Cannot send ban notification email to user {UserId} - no email address on file", userId);
             }
 
             // Notify all reporters of this user
@@ -460,6 +544,8 @@ namespace TanuiApp.Controllers
                 .Select(u => new { u.Id, u.Email, u.FullName })
                 .ToListAsync();
 
+            _logger.LogInformation("Found {ReporterCount} reporter(s) to notify about {Action} action on user {ReportedUserId}", reporters.Count, action, reportedUserId);
+
             foreach (var rep in reporters)
             {
                 string emailSubject;
@@ -498,14 +584,14 @@ namespace TanuiApp.Controllers
                 // Send email via SMTP
                 try
                 {
+                    _logger.LogInformation("Attempting to send {Action} notification email to reporter {ReporterId} at {Email}", action, rep.Id, rep.Email);
                     await _emailSender.SendEmailAsync(rep.Email!, emailSubject, emailBody);
+                    _logger.LogInformation("✓ Successfully sent {Action} notification email to reporter {ReporterId} ({ReporterName}) at {Email}", action, rep.Id, rep.FullName, rep.Email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to send reporter email to {Email}", rep.Email);
+                    _logger.LogError(ex, "✗ Failed to send {Action} notification email to reporter {ReporterId} at {Email}", action, rep.Id, rep.Email);
                 }
-
-                _logger.LogInformation("Notified reporter {ReporterId} about {Action} of user {ReportedUserId}", rep.Id, action, reportedUserId);
             }
 
             await _context.SaveChangesAsync();

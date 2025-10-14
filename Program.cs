@@ -5,6 +5,7 @@ using TanuiApp.Data;
 using TanuiApp.Models;
 using TanuiApp.Services;
 using TanuiApp.Hubs;
+using TanuiApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,9 +56,17 @@ try
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+    // Configure security stamp validation to check on every request
+    builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    {
+        // Validate security stamp on every request (0 seconds = immediate)
+        // This ensures banned/suspended users are logged out immediately
+        options.ValidationInterval = TimeSpan.Zero;
+    });
+
     // App services
     builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
-    builder.Services.AddSingleton<IChatbotService, ChatbotService>();
+    builder.Services.AddScoped<IChatbotService, EnhancedChatbotService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
 
     // SMTP Email
@@ -100,10 +109,15 @@ try
             await context.Database.EnsureCreatedAsync();
             logger.LogInformation("Database initialization completed");
 
-            // Seed default admin and test data
+            // Seed default admin and chatbot training data
             var userManager = services.GetRequiredService<UserManager<Users>>();
             await DbSeeder.SeedDefaultAdmin(userManager);
-            
+
+            // Seed chatbot training data (idempotent) and retrain model
+            var db = services.GetRequiredService<AppDbContext>();
+            var chatbot = services.GetRequiredService<IChatbotService>();
+            await DbSeeder.SeedChatbotTrainingData(db, chatbot);
+
             // Uncomment to seed test users for development
             // await DbSeeder.SeedTestData(userManager);
         }
@@ -161,6 +175,9 @@ try
     // Authentication middleware MUST come before authorization
     app.UseAuthentication();
     app.UseAuthorization();
+    
+    // Ban check middleware - must come after authentication to check authenticated users
+    app.UseBanCheck();
 
     // Configure authorization policies for different user roles
     using (var scope = app.Services.CreateScope())

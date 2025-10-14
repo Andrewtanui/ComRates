@@ -29,8 +29,17 @@ namespace UsersApp.Controllers
             this.context = context;
         }
 
-        public IActionResult Login()
+        public IActionResult Login(bool banned = false, bool suspended = false, string? reason = null)
         {
+            if (banned)
+            {
+                ModelState.AddModelError("", $"Your account has been permanently banned. Reason: {reason ?? "Violation of terms"}. This account cannot be used again.");
+            }
+            else if (suspended)
+            {
+                ModelState.AddModelError("", $"Your account has been suspended. Reason: {reason ?? "Under review"}. Please contact support.");
+            }
+            
             return View();
         }
 

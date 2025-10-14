@@ -273,7 +273,7 @@ namespace TanuiApp.Controllers
         public async Task<IActionResult> PublicCatalog()
         {
             var users = await _context.Users
-                .Where(u => u.IsPublicProfile)
+                .Where(u => u.IsPublicProfile && u.UserRole != UserRole.SystemAdmin)
                 .Select(u => new {
                     u.Id,
                     u.FullName,
@@ -293,7 +293,7 @@ namespace TanuiApp.Controllers
             if (string.IsNullOrWhiteSpace(id)) return RedirectToAction("PublicCatalog");
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null || !user.IsPublicProfile)
+            if (user == null || !user.IsPublicProfile || user.UserRole == UserRole.SystemAdmin)
             {
                 return NotFound();
             }

@@ -1,12 +1,17 @@
-﻿@model TanuiApp.ViewModels.ProfileViewModel
+@model TanuiApp.ViewModels.ProfileViewModel
+@using Microsoft.AspNetCore.Identity
+@using TanuiApp.Models
+@inject SignInManager<Users> SignInManager
+@inject UserManager<Users> UserManager
 
 @{
     ViewData["Title"] = "Profile Settings";
+    var currentUser = await UserManager.GetUserAsync(User);
+    var isBuyer = currentUser?.UserRole == UserRole.Buyer;
 }
 
 <div class="container my-5">
     <div class="row">
-        <!-- Sidebar Navigation -->
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header">
@@ -31,6 +36,30 @@
 
         <!-- Main Content -->
         <div class="col-md-9">
+            @* Seller Upgrade Request Card - Only for Buyers *@
+            @if (isBuyer)
+            {
+                <div class="card mb-3 border-primary">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="card-title mb-2">
+                                    <i class="bi bi-shop text-primary"></i> Want to Sell on ComRates?
+                                </h5>
+                                <p class="card-text text-muted mb-0">
+                                    Upgrade your account to a Seller and start listing products. Contact our support team to request an upgrade.
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                <a href="@Url.Action("ContactSupport", "Messages", new { reason = "seller-upgrade" })" class="btn btn-primary">
+                                    <i class="bi bi-life-preserver me-1"></i> Request Seller Upgrade
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <div class="card">
                 <div class="card-header">
                     <h4><i class="fas fa-user"></i> Profile Settings</h4>

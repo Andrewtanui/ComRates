@@ -1,13 +1,129 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 <style>
-    .askai-fab { position: fixed; right: 20px; bottom: 20px; z-index: 1050; }
-    .askai-panel { position: fixed; right: 20px; bottom: 84px; width: 320px; max-height: 60vh; z-index: 1050; display: none; }
-    .askai-messages { height: 240px; overflow: auto; }
+    .askai-fab { 
+        position: fixed; 
+        right: 20px; 
+        bottom: 20px; 
+        z-index: 1050;
+        transition: transform 0.3s ease;
+    }
+    .askai-fab:hover {
+        transform: scale(1.1);
+    }
+    .askai-panel { 
+        position: fixed; 
+        right: 20px; 
+        bottom: 84px; 
+        width: 380px; 
+        max-height: 70vh; 
+        z-index: 1050; 
+        display: none;
+        animation: slideUp 0.3s ease;
+    }
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .askai-messages { 
+        height: 400px; 
+        overflow-y: auto; 
+        scroll-behavior: smooth;
+    }
+    .askai-message {
+        margin-bottom: 12px;
+        animation: fadeIn 0.3s ease;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .askai-message.user {
+        text-align: right;
+    }
+    .askai-message.bot {
+        text-align: left;
+    }
+    .askai-bubble {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 16px;
+        max-width: 85%;
+        word-wrap: break-word;
+        font-size: 0.9rem;
+    }
+    .askai-bubble.user {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .askai-bubble.bot {
+        background: #f1f3f5;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+    .askai-links {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .askai-link-btn {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+    .askai-typing {
+        display: none;
+        padding: 8px 12px;
+        background: #f1f3f5;
+        border-radius: 16px;
+        width: fit-content;
+    }
+    .askai-typing span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6c757d;
+        margin: 0 2px;
+        animation: typing 1.4s infinite;
+    }
+    .askai-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .askai-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @@keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+    .askai-quick-actions {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+    .askai-quick-btn {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+    .askai-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    .askai-messages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .askai-messages::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    .askai-messages::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 </style>
 
-<button id="askaiFab" type="button" class="btn btn-success rounded-circle shadow askai-fab" title="Ask AI" aria-label="Ask AI" style="width:56px;height:56px">
-    <i class="bi bi-stars"></i>
+<button id="askaiFab" type="button" class="btn btn-success rounded-circle shadow askai-fab" title="Ask AI Assistant" aria-label="Ask AI" style="width:56px;height:56px">
+    <i class="bi bi-stars fs-4"></i>
     <span class="visually-hidden">Ask AI</span>
     <form id="askaiTokenForm" method="post" class="d-none">
         @Html.AntiForgeryToken()
@@ -17,20 +133,48 @@
     <input type="hidden" id="askaiHeaderName" value="@Antiforgery.GetAndStoreTokens(Context).HeaderName" />
 </button>
 
-<div id="askaiPanel" class="card shadow askai-panel">
-    <div class="card-header d-flex justify-content-between align-items-center">
+<div id="askaiPanel" class="card shadow-lg askai-panel">
+    <div class="card-header d-flex justify-content-between align-items-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
         <span class="fw-semibold"><i class="bi bi-stars me-2"></i>AI Assistant</span>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="askaiClose">Close</button>
-    </div>
-    <div class="card-body p-2 d-flex flex-column">
-        <div id="askaiMessages" class="askai-messages mb-2 border rounded p-2 bg-light"></div>
-        <div class="input-group">
-            <input id="askaiInput" type="text" class="form-control" placeholder="Ask about shipping, returns, payments..." />
-            <button id="askaiSend" class="btn btn-success" type="button"><i class="bi bi-send"></i></button>
+        <div>
+            <button type="button" class="btn btn-sm btn-light" id="askaiClear" title="Clear conversation">
+                <i class="bi bi-trash"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-light ms-1" id="askaiClose" title="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     </div>
-    <div class="card-footer small text-muted">Powered by ML.NET</div>
-    <div id="askaiError" class="text-danger small d-none p-2"></div>
+    <div class="card-body p-3 d-flex flex-column">
+        <div class="askai-quick-actions">
+            <button class="btn btn-outline-secondary btn-sm askai-quick-btn" data-prompt="Show me products">🛍️ Products</button>
+            <button class="btn btn-outline-secondary btn-sm askai-quick-btn" data-prompt="Track my orders">📦 Orders</button>
+            <button class="btn btn-outline-secondary btn-sm askai-quick-btn" data-prompt="Shipping info">🚚 Shipping</button>
+            <button class="btn btn-outline-secondary btn-sm askai-quick-btn" data-prompt="How to return">↩️ Returns</button>
+            <button class="btn btn-outline-secondary btn-sm askai-quick-btn" data-prompt="Help">❓ Help</button>
+        </div>
+        <div id="askaiMessages" class="askai-messages mb-2 border rounded p-3 bg-white">
+            <div class="askai-message bot">
+                <div class="askai-bubble bot">
+                    👋 Hi! I'm your ComRates AI assistant. I can help you navigate the system, find products, track orders, and answer questions about shipping, returns, and more. How can I assist you today?
+                </div>
+            </div>
+        </div>
+        <div id="askaiTyping" class="askai-typing mb-2">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="input-group">
+            <input id="askaiInput" type="text" class="form-control" placeholder="Ask me anything..." />
+            <button id="askaiSend" class="btn btn-success" type="button" title="Send message">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-footer small text-muted d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cpu"></i> Powered by ML.NET</span>
+        <a href="@Url.Action("ChatHistory", "Messages")" class="text-decoration-none small">View History</a>
+    </div>
+    <div id="askaiError" class="alert alert-danger small d-none m-2"></div>
 </div>
 
 <script>
@@ -38,64 +182,190 @@
         const fab = document.getElementById('askaiFab');
         const panel = document.getElementById('askaiPanel');
         const closeBtn = document.getElementById('askaiClose');
+        const clearBtn = document.getElementById('askaiClear');
         const sendBtn = document.getElementById('askaiSend');
         const input = document.getElementById('askaiInput');
         const messages = document.getElementById('askaiMessages');
+        const typingIndicator = document.getElementById('askaiTyping');
         const errorBox = document.getElementById('askaiError');
         const postUrl = document.getElementById('askaiPostUrl')?.value;
         const token = document.getElementById('askaiToken')?.value;
         const headerName = document.getElementById('askaiHeaderName')?.value || 'RequestVerificationToken';
 
-        function showPanel(){ panel.style.display = 'block'; setTimeout(()=> input?.focus(), 0); }
-        function hidePanel(){ panel.style.display = 'none'; }
-        function append(role, text){
-            const wrap = document.createElement('div');
-            wrap.className = 'mb-2';
-            const badge = role === 'you' ? '<span class="badge bg-primary me-1">You</span>' : '<span class="badge bg-success me-1">AI</span>';
-            wrap.innerHTML = badge + '<span>'+escapeHtml(text)+'</span>';
-            messages.appendChild(wrap);
+        // Quick action buttons
+        const quickBtns = document.querySelectorAll('.askai-quick-btn');
+        quickBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prompt = btn.getAttribute('data-prompt');
+                if(prompt) {
+                    input.value = prompt;
+                    sendBtn.click();
+                }
+            });
+        });
+
+        function showPanel(){ 
+            panel.style.display = 'block'; 
+            setTimeout(()=> {
+                input?.focus();
+                scrollToBottom();
+            }, 100); 
+        }
+        
+        function hidePanel(){ 
+            panel.style.display = 'none'; 
+        }
+
+        function scrollToBottom(){
             messages.scrollTop = messages.scrollHeight;
         }
+
+        function showTyping(){
+            typingIndicator.style.display = 'block';
+            scrollToBottom();
+        }
+
+        function hideTyping(){
+            typingIndicator.style.display = 'none';
+        }
+
+        function appendMessage(role, text){
+            const wrap = document.createElement('div');
+            wrap.className = `askai-message ${role}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `askai-bubble ${role}`;
+            bubble.textContent = text;
+            
+            wrap.appendChild(bubble);
+            messages.appendChild(wrap);
+            scrollToBottom();
+        }
+
         function appendLinks(links){
             if(!Array.isArray(links) || links.length === 0) return;
-            const container = document.createElement('div');
-            container.className = 'mb-2';
+            
+            const lastMessage = messages.lastElementChild;
+            if(!lastMessage) return;
+
+            const linksContainer = document.createElement('div');
+            linksContainer.className = 'askai-links';
+            
             for(const l of links){
                 const a = document.createElement('a');
-                a.className = 'btn btn-outline-secondary btn-sm me-2 mb-2';
+                a.className = 'btn btn-outline-primary btn-sm askai-link-btn';
                 a.href = l.url;
                 a.textContent = l.text;
-                container.appendChild(a);
+                a.target = '_self';
+                linksContainer.appendChild(a);
             }
-            messages.appendChild(container);
-            messages.scrollTop = messages.scrollHeight;
+            
+            lastMessage.appendChild(linksContainer);
+            scrollToBottom();
         }
-        function escapeHtml(str){ return String(str).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
-        fab?.addEventListener('click', ()=>{ panel.style.display === 'none' ? showPanel() : hidePanel(); });
-        closeBtn?.addEventListener('click', hidePanel);
-        input?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendBtn?.click(); }});
+        function clearConversation(){
+            if(confirm('Clear this conversation?')){
+                // Keep only the welcome message
+                const welcomeMsg = messages.querySelector('.askai-message.bot');
+                messages.innerHTML = '';
+                if(welcomeMsg){
+                    messages.appendChild(welcomeMsg.cloneNode(true));
+                }
+                errorBox.classList.add('d-none');
+            }
+        }
 
-        sendBtn?.addEventListener('click', async ()=>{
+        function escapeHtml(str){ 
+            return String(str).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); 
+        }
+
+        async function sendMessage(){
             const q = input.value.trim();
             if(!q) return;
+            
             errorBox.classList.add('d-none');
-            append('you', q);
-            input.value='';
+            appendMessage('user', q);
+            input.value = '';
+            input.disabled = true;
+            sendBtn.disabled = true;
+            showTyping();
+
             try{
                 const body = new URLSearchParams();
                 body.append('prompt', q);
                 body.append('__RequestVerificationToken', token || '');
-                const resp = await fetch(postUrl, { method: 'POST', headers: { 'Content-Type':'application/x-www-form-urlencoded' }, body: body.toString() });
-                if(!resp.ok){ throw new Error('Request failed: '+resp.status); }
+                
+                const resp = await fetch(postUrl, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type':'application/x-www-form-urlencoded' }, 
+                    body: body.toString() 
+                });
+                
+                if(!resp.ok){ 
+                    throw new Error('Request failed: '+resp.status); 
+                }
+                
                 const json = await resp.json();
-                append('ai', json?.reply || 'No reply');
+                
+                hideTyping();
+                
+                if(json.ok === false){
+                    throw new Error(json.reply || 'Unknown error');
+                }
+                
+                appendMessage('bot', json?.reply || 'No reply');
                 appendLinks(json?.links || []);
+                
             }catch(err){
+                hideTyping();
                 errorBox.textContent = 'Error: ' + (err?.message || err);
                 errorBox.classList.remove('d-none');
+                console.error('Chatbot error:', err);
+            } finally {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Event listeners
+        fab?.addEventListener('click', ()=>{ 
+            panel.style.display === 'none' ? showPanel() : hidePanel(); 
+        });
+        
+        closeBtn?.addEventListener('click', hidePanel);
+        clearBtn?.addEventListener('click', clearConversation);
+        
+        input?.addEventListener('keydown', (e)=>{ 
+            if(e.key==='Enter' && !e.shiftKey){ 
+                e.preventDefault(); 
+                sendMessage();
             }
         });
+
+        sendBtn?.addEventListener('click', sendMessage);
+
+        // Save conversation to localStorage
+        window.addEventListener('beforeunload', () => {
+            try {
+                const conversation = messages.innerHTML;
+                localStorage.setItem('askai_conversation', conversation);
+            } catch(e) {
+                console.warn('Could not save conversation:', e);
+            }
+        });
+
+        // Restore conversation from localStorage
+        try {
+            const saved = localStorage.getItem('askai_conversation');
+            if(saved && saved.length > 200) { // Only restore if there's meaningful content
+                messages.innerHTML = saved;
+                scrollToBottom();
+            }
+        } catch(e) {
+            console.warn('Could not restore conversation:', e);
+        }
     })();
 </script>
 

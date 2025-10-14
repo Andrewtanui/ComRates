@@ -1,0 +1,255 @@
+@{
+    ViewData["Title"] = "Chatbot Analytics Dashboard";
+    var totalConversations = (int)ViewBag.TotalConversations;
+    var todayConversations = (int)ViewBag.TodayConversations;
+    var avgConfidence = (double)ViewBag.AvgConfidence;
+    var topIntents = ViewBag.TopIntents as List<dynamic>;
+    var recentConversations = ViewBag.RecentConversations as List<TanuiApp.Models.ChatbotConversation>;
+    var lowConfidenceConversations = ViewBag.LowConfidenceConversations as List<TanuiApp.Models.ChatbotConversation>;
+}
+
+<div class="container-fluid my-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-robot me-2"></i>Chatbot Analytics Dashboard</h2>
+                <div>
+                    <a asp-action="TrainingData" class="btn btn-primary me-2">
+                        <i class="bi bi-database me-1"></i>Training Data
+                    </a>
+                    <a asp-action="AllConversations" class="btn btn-secondary me-2">
+                        <i class="bi bi-chat-dots me-1"></i>All Conversations
+                    </a>
+                    <a asp-action="ExportConversations" class="btn btn-success">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Conversations</h6>
+                            <h3 class="mb-0">@totalConversations.ToString("N0")</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-chat-left-text fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Today's Conversations</h6>
+                            <h3 class="mb-0">@todayConversations</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-calendar-check fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Avg Confidence</h6>
+                            <h3 class="mb-0">@((avgConfidence * 100).ToString("F1"))%</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-speedometer fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Model Status</h6>
+                            <h5 class="mb-0 text-success"><i class="bi bi-check-circle-fill"></i> Active</h5>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-cpu fs-1"></i>
+                        </div>
+                    </div>
+                    <form asp-action="RetrainModel" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Retrain Model
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Intents Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Top Intents</h5>
+                </div>
+                <div class="card-body">
+                    @if (topIntents != null && topIntents.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Intent</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var intent in topIntents)
+                                    {
+                                        var percentage = (intent.Count / (double)totalConversations * 100);
+                                        <tr>
+                                            <td><span class="badge bg-secondary">@intent.Intent</span></td>
+                                            <td>@intent.Count</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: @percentage%" 
+                                                         aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100">
+                                                        @percentage.ToString("F1")%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No data available yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Confidence Conversations -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Low Confidence Conversations</h5>
+                </div>
+                <div class="card-body">
+                    @if (lowConfidenceConversations != null && lowConfidenceConversations.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var conv in lowConfidenceConversations)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong>User:</strong> @conv.UserMessage<br/>
+                                            <small class="text-muted">Intent: @conv.DetectedIntent</small>
+                                        </div>
+                                        <span class="badge bg-danger">@((conv.ConfidenceScore * 100).ToString("F1"))%</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No low confidence conversations found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Conversations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Conversations</h5>
+                </div>
+                <div class="card-body">
+                    @if (recentConversations != null && recentConversations.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>User</th>
+                                        <th>Message</th>
+                                        <th>Response</th>
+                                        <th>Intent</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var conv in recentConversations)
+                                    {
+                                        <tr>
+                                            <td class="text-nowrap">
+                                                <small>@conv.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm")</small>
+                                            </td>
+                                            <td>@(conv.User?.FullName ?? "Unknown")</td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;" title="@conv.UserMessage">
+                                                    @conv.UserMessage
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 250px;" title="@conv.BotResponse">
+                                                    @conv.BotResponse
+                                                </div>
+                                            </td>
+                                            <td><span class="badge bg-secondary">@conv.DetectedIntent</span></td>
+                                            <td>
+                                                @{
+                                                    var badgeClass = conv.ConfidenceScore >= 0.7f ? "bg-success" : 
+                                                                     conv.ConfidenceScore >= 0.5f ? "bg-warning" : "bg-danger";
+                                                }
+                                                <span class="badge @badgeClass">@((conv.ConfidenceScore * 100).ToString("F1"))%</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No conversations yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -61,12 +61,16 @@
                             </form>
                         }
 
-                        @* Chat: Available for Sellers and Delivery, hidden for Admin *@
+                        @* Chat & Support: Available for non-admin users *@
                         @if (!isSystemAdmin)
                         {
                             <!-- Chat button -->
-                            <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat">
+                            <a class="btn btn-light me-2" asp-controller="Messages" asp-action="Chat" title="Messages">
                                 <i class="bi bi-chat-dots"></i>
+                            </a>
+                            <!-- Contact Support button -->
+                            <a class="btn btn-light me-2" asp-controller="Messages" asp-action="ContactSupport" title="Contact Support">
+                                <i class="bi bi-life-preserver"></i>
                             </a>
                         }
                     }
@@ -87,6 +91,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="AdminDashboard" asp-action="Index">
                                     <i class="bi bi-shield-check me-1"></i>Admin Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="ChatbotAdmin" asp-action="Dashboard">
+                                    <i class="bi bi-robot me-1"></i>Chatbot Admin
                                 </a>
                             </li>
                         }
@@ -130,7 +139,17 @@
                                     <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
                                 </li>
                             }
-                            
+
+                            @* Contact Support: Available for non-admin users *@
+                            @if (!isSystemAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Messages" asp-action="ContactSupport">
+                                        <i class="bi bi-life-preserver me-1"></i>Contact Support
+                                    </a>
+                                </li>
+                            }
+
                             @* Sell: Only for Sellers *@
                             @if (isSeller)
                             {

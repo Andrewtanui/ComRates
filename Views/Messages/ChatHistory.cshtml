@@ -1,0 +1,95 @@
+@model List<TanuiApp.Models.ChatbotConversation>
+
+@{
+    ViewData["Title"] = "AI Chat History";
+}
+
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-clock-history me-2"></i>AI Chat History</h2>
+                <a asp-controller="Messages" asp-action="Chat" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Messages
+                </a>
+            </div>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    You haven't had any conversations with the AI assistant yet. Click the AI button in the bottom right to start chatting!
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Your Question</th>
+                                        <th>AI Response</th>
+                                        <th>Intent</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var conv in Model)
+                                    {
+                                        <tr>
+                                            <td class="text-nowrap">
+                                                <small>@conv.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</small><br/>
+                                                <small class="text-muted">@conv.CreatedAt.ToLocalTime().ToString("hh:mm tt")</small>
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 250px;" title="@conv.UserMessage">
+                                                    <i class="bi bi-person-fill text-primary me-1"></i>
+                                                    @conv.UserMessage
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 300px;" title="@conv.BotResponse">
+                                                    <i class="bi bi-robot text-success me-1"></i>
+                                                    @conv.BotResponse
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">@conv.DetectedIntent</span>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var confidencePercent = (conv.ConfidenceScore * 100).ToString("F1");
+                                                    var badgeClass = conv.ConfidenceScore >= 0.7f ? "bg-success" : 
+                                                                     conv.ConfidenceScore >= 0.5f ? "bg-warning" : "bg-danger";
+                                                }
+                                                <span class="badge @badgeClass">@confidencePercent%</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>
+                            <i class="bi bi-info-circle me-1"></i>
+                            Showing your last @Model.Count conversation(s) with the AI assistant
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+    .text-truncate {
+        display: inline-block;
+    }
+</style>

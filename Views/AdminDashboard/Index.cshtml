@@ -281,7 +281,20 @@
                                                 }
                                             </td>
                                             <td>
-                                                @if (!user.IsBanned)
+                                                @if (user.IsBanned)
+                                                {
+                                                    <span class="text-danger small">Permanently Banned</span>
+                                                }
+                                                else if (user.IsSuspended)
+                                                {
+                                                    <button class="btn btn-sm btn-success unsuspend-user" data-user-id="@user.UserId" data-user-name="@user.FullName">
+                                                        <i class="bi bi-check-circle"></i> Unsuspend
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger ban-user" data-user-id="@user.UserId" data-user-name="@user.FullName">
+                                                        <i class="bi bi-x-circle"></i> Ban
+                                                    </button>
+                                                }
+                                                else
                                                 {
                                                     <button class="btn btn-sm btn-danger ban-user" data-user-id="@user.UserId" data-user-name="@user.FullName">
                                                         <i class="bi bi-x-circle"></i> Ban
@@ -481,6 +494,35 @@
                     }
                 } catch (error) {
                     alert('Error banning user');
+                }
+            });
+        });
+
+        // Unsuspend user
+        document.querySelectorAll('.unsuspend-user').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                
+                if (!confirm(`Unsuspend ${userName}? Their account will be restored and products reactivated.`)) return;
+                
+                try {
+                    const response = await fetch('@Url.Action("UnsuspendUser", "AdminDashboard")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `userId=${userId}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Failed to unsuspend user');
+                    }
+                } catch (error) {
+                    alert('Error unsuspending user');
                 }
             });
         });

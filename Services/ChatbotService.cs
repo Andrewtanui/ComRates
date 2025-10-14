@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TanuiApp.Models;
 
 namespace TanuiApp.Services
 {
@@ -52,12 +53,12 @@ namespace TanuiApp.Services
 
             _intentToResponse = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["greeting"] = "Hey there! 😊 I’m your ComRates assistant. What can I help you find today?",
-                ["help"] = "I’ve got you! Ask me about finding products, shipping, returns, or managing your account.",
+                ["greeting"] = "Hey there! 😊 I'm your ComRates assistant. What can I help you find today?",
+                ["help"] = "I've got you! Ask me about finding products, shipping, returns, or managing your account.",
                 ["shipping"] = "Great question! Most orders ship out in 1–2 days and arrive within 2–5 business days depending on your location.",
                 ["returns"] = "No worries—returns are easy. You can start a return within 14 days of delivery from your orders page.",
                 ["payments"] = "We currently support major cards and M-Pesa. You can pick your method at checkout.",
-                ["pricing"] = "Prices are shown on each product page. You’ll also spot discounts and deals on the home page."
+                ["pricing"] = "Prices are shown on each product page. You'll also spot discounts and deals on the home page."
             };
 
             _intentToLinks = new Dictionary<string, List<(string, string)>>(StringComparer.OrdinalIgnoreCase)
@@ -89,14 +90,14 @@ namespace TanuiApp.Services
             return Task.FromResult("I'm not sure yet. Try asking about shipping, returns, or payments.");
         }
 
-        public Task<(string text, List<(string text, string url)> links)> GetBotReplyWithLinksAsync(string userMessage, string? userName = null)
+        public Task<(string text, List<(string text, string url)> links)> GetBotReplyWithLinksAsync(string userMessage, string? userName = null, string? userId = null)
         {
             var reply = "";
             var links = new List<(string text, string url)>();
 
             if (string.IsNullOrWhiteSpace(userMessage))
             {
-                reply = "Tell me a bit about what you’re looking for and I’ll point you in the right direction.";
+                reply = "Tell me a bit about what you're looking for and I'll point you in the right direction.";
                 return Task.FromResult((reply, links));
             }
 
@@ -118,6 +119,26 @@ namespace TanuiApp.Services
             }
 
             return Task.FromResult((reply, links));
+        }
+
+        public Task RetrainModelAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> AddTrainingDataAsync(string text, string intent, string? addedBy = null)
+        {
+            return Task.FromResult(false);
+        }
+
+        public Task<List<ChatbotConversation>> GetUserConversationHistoryAsync(string userId, int limit = 10)
+        {
+            return Task.FromResult(new List<ChatbotConversation>());
+        }
+
+        public Task<bool> ProvideFeedbackAsync(int conversationId, bool wasHelpful, string? feedback = null)
+        {
+            return Task.FromResult(false);
         }
     }
 
