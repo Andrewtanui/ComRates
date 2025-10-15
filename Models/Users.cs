@@ -55,5 +55,10 @@ namespace TanuiApp.Models
         public string? BanReason { get; set; }
         public int ReportCount { get; set; } = 0;
         public DateTime? LastReportedAt { get; set; }
+
+        // Email verification with OTP
+        public bool EmailVerified { get; set; } = false;
+        public string? EmailVerificationOTP { get; set; }
+        public DateTime? OTPExpiryTime { get; set; }
     }
 }

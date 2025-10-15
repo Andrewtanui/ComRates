@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TanuiApp.Data;
 using TanuiApp.Models;
 using TanuiApp.ViewModels;
+using TanuiApp.Services;
 
 namespace UsersApp.Controllers
 {
@@ -14,19 +15,25 @@ namespace UsersApp.Controllers
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly ILogger<AccountController> logger;
         private readonly AppDbContext context;
+        private readonly IEmailSender emailSender;
+        private readonly IOtpService otpService;
 
         public AccountController(
             SignInManager<Users> signInManager, 
             UserManager<Users> userManager, 
             RoleManager<IdentityRole> roleManager,
             ILogger<AccountController> logger,
-            AppDbContext context)
+            AppDbContext context,
+            IEmailSender emailSender,
+            IOtpService otpService)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
             this.roleManager = roleManager;
             this.logger = logger;
             this.context = context;
+            this.emailSender = emailSender;
+            this.otpService = otpService;
         }
 
         public IActionResult Login(bool banned = false, bool suspended = false, string? reason = null)
@@ -48,30 +55,66 @@ namespace UsersApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                // First check if user exists and credentials are valid
+                var user = await userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    // Check if user is banned
+                    if (user.IsBanned)
+                    {
+                        ModelState.AddModelError("", $"Your account has been permanently banned. Reason: {user.BanReason ?? "Violation of terms"}. This email cannot be used again.");
+                        return View(model);
+                    }
+
+                    // Check if user is suspended
+                    if (user.IsSuspended)
+                    {
+                        ModelState.AddModelError("", $"Your account has been suspended. Reason: {user.SuspensionReason ?? "Under review"}. Please contact support.");
+                        return View(model);
+                    }
+
+                    // Check if email is verified
+                    if (!user.EmailVerified)
+                    {
+                        // Generate new OTP and send it
+                        var otp = otpService.GenerateOTP();
+                        user.EmailVerificationOTP = otp;
+                        user.OTPExpiryTime = DateTime.Now.AddMinutes(10);
+                        await userManager.UpdateAsync(user);
+
+                        // Send OTP email
+                        var emailBody = $@"
+                            <h2>Email Verification Required</h2>
+                            <p>Hello {user.FullName},</p>
+                            <p>Your account is not verified. Please use the following OTP to verify your email:</p>
+                            <h1 style='color: #4CAF50; font-size: 32px; letter-spacing: 5px;'>{otp}</h1>
+                            <p>This OTP will expire in 10 minutes.</p>
+                            <p>If you did not request this, please ignore this email.</p>
+                        ";
+                        
+                        try
+                        {
+                            await emailSender.SendEmailAsync(user.Email, "Verify Your Email - ComRates", emailBody);
+                            TempData["Email"] = user.Email;
+                            TempData["InfoMessage"] = "Your account is not verified. An OTP has been sent to your email.";
+                            return RedirectToAction("VerifyOtp");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError($"Failed to send OTP email: {ex.Message}");
+                            ModelState.AddModelError("", "Failed to send verification email. Please try again later.");
+                            return View(model);
+                        }
+                    }
+                }
+
                 var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
                 if (result.Succeeded)
                 {
                     // Log user role on login for verification
-                    var user = await userManager.FindByEmailAsync(model.Email);
                     if (user != null)
                     {
-                        // Check if user is banned
-                        if (user.IsBanned)
-                        {
-                            await signInManager.SignOutAsync();
-                            ModelState.AddModelError("", $"Your account has been permanently banned. Reason: {user.BanReason ?? "Violation of terms"}. This email cannot be used again.");
-                            return View(model);
-                        }
-
-                        // Check if user is suspended
-                        if (user.IsSuspended)
-                        {
-                            await signInManager.SignOutAsync();
-                            ModelState.AddModelError("", $"Your account has been suspended. Reason: {user.SuspensionReason ?? "Under review"}. Please contact support.");
-                            return View(model);
-                        }
-
                         var roles = await userManager.GetRolesAsync(user);
                         logger.LogInformation($"User {user.Email} logged in with role: {user.UserRole}, Assigned roles: {string.Join(", ", roles)}");
                         
@@ -218,8 +261,35 @@ namespace UsersApp.Controllers
                             logger.LogError($"Failed to assign role {roleName} to user {users.Email}: {string.Join(", ", addToRoleResult.Errors.Select(e => e.Description))}");
                         }
 
-                        TempData["SuccessMessage"] = $"Account created successfully! You have been registered as a {roleName}.";
-                        return RedirectToAction("Login", "Account");
+                        // Generate OTP and send verification email
+                        var otp = otpService.GenerateOTP();
+                        users.EmailVerificationOTP = otp;
+                        users.OTPExpiryTime = DateTime.Now.AddMinutes(10);
+                        users.EmailVerified = false;
+                        await userManager.UpdateAsync(users);
+
+                        var emailBody = $@"
+                            <h2>Welcome to ComRates!</h2>
+                            <p>Hello {users.FullName},</p>
+                            <p>Thank you for registering. Please verify your email using the OTP below:</p>
+                            <h1 style='color: #4CAF50; font-size: 32px; letter-spacing: 5px;'>{otp}</h1>
+                            <p>This OTP will expire in 10 minutes.</p>
+                            <p>If you did not create this account, please ignore this email.</p>
+                        ";
+
+                        try
+                        {
+                            await emailSender.SendEmailAsync(users.Email, "Verify Your Email - ComRates", emailBody);
+                            TempData["Email"] = users.Email;
+                            TempData["SuccessMessage"] = $"Account created successfully! An OTP has been sent to {users.Email}. Please verify your email.";
+                            return RedirectToAction("VerifyOtp", "Account");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError($"Failed to send verification email: {ex.Message}");
+                            TempData["WarningMessage"] = "Account created but failed to send verification email. Please contact support.";
+                            return RedirectToAction("Login", "Account");
+                        }
                     }
                     else
                     {
@@ -400,6 +470,109 @@ namespace UsersApp.Controllers
         {
             await signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        // OTP Verification Actions
+        public IActionResult VerifyOtp()
+        {
+            var email = TempData["Email"]?.ToString();
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Login");
+            }
+            
+            // Keep email in TempData for the POST action
+            TempData.Keep("Email");
+            
+            return View(new VerifyOtpViewModel { Email = email });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "User not found.");
+                    return View(model);
+                }
+
+                // Validate OTP
+                if (otpService.ValidateOTP(user.EmailVerificationOTP, user.OTPExpiryTime, model.OTP))
+                {
+                    // Mark email as verified
+                    user.EmailVerified = true;
+                    user.EmailVerificationOTP = null;
+                    user.OTPExpiryTime = null;
+                    await userManager.UpdateAsync(user);
+
+                    logger.LogInformation($"Email verified successfully for user: {user.Email}");
+                    TempData["SuccessMessage"] = "Email verified successfully! You can now log in.";
+                    return RedirectToAction("Login");
+                }
+                else
+                {
+                    if (user.OTPExpiryTime.HasValue && DateTime.Now > user.OTPExpiryTime.Value)
+                    {
+                        ModelState.AddModelError("", "OTP has expired. Please request a new one.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Invalid OTP. Please try again.");
+                    }
+                    return View(model);
+                }
+            }
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResendOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData["ErrorMessage"] = "Email is required.";
+                return RedirectToAction("Login");
+            }
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("Login");
+            }
+
+            // Generate new OTP
+            var otp = otpService.GenerateOTP();
+            user.EmailVerificationOTP = otp;
+            user.OTPExpiryTime = DateTime.Now.AddMinutes(10);
+            await userManager.UpdateAsync(user);
+
+            var emailBody = $@"
+                <h2>Email Verification OTP</h2>
+                <p>Hello {user.FullName},</p>
+                <p>You requested a new OTP. Please use the following code to verify your email:</p>
+                <h1 style='color: #4CAF50; font-size: 32px; letter-spacing: 5px;'>{otp}</h1>
+                <p>This OTP will expire in 10 minutes.</p>
+                <p>If you did not request this, please ignore this email.</p>
+            ";
+
+            try
+            {
+                await emailSender.SendEmailAsync(user.Email, "New Verification OTP - ComRates", emailBody);
+                TempData["Email"] = user.Email;
+                TempData["SuccessMessage"] = "A new OTP has been sent to your email.";
+                logger.LogInformation($"New OTP sent to user: {user.Email}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to resend OTP email: {ex.Message}");
+                TempData["ErrorMessage"] = "Failed to send OTP. Please try again later.";
+            }
+
+            return RedirectToAction("VerifyOtp");
         }
     }
 }

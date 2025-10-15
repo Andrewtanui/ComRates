@@ -1,0 +1,98 @@
+@using TanuiApp.ViewModels
+@model VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Verify Email";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-4">Verify Your Email</h2>
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> An OTP has been sent to <strong>@Model.Email</strong>. Please check your email and enter the code below.
+        </div>
+        
+        <form asp-action="VerifyOtp" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <input type="hidden" asp-for="Email" />
+            
+            <div class="mb-3">
+                <label asp-for="OTP" class="form-label">Enter 6-Digit OTP</label>
+                <input asp-for="OTP" class="form-control form-control-lg text-center" 
+                       style="letter-spacing: 10px; font-size: 24px; font-weight: bold;"
+                       maxlength="6" 
+                       placeholder="000000"
+                       autocomplete="off" />
+                <span asp-validation-for="OTP" class="text-danger"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-success w-100 p-2 mb-3">
+                <i class="bi bi-check-circle"></i> Verify Email
+            </button>
+            
+            <div class="text-center">
+                <p class="text-muted mb-2">Didn't receive the code?</p>
+                <form asp-action="ResendOtp" method="post" class="d-inline">
+                    <input type="hidden" name="email" value="@Model.Email" />
+                    <button type="submit" class="btn btn-link text-decoration-none">
+                        <i class="bi bi-arrow-clockwise"></i> Resend OTP
+                    </button>
+                </form>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a asp-controller="Account" asp-action="Login" class="text-decoration-none">
+                    <i class="bi bi-arrow-left"></i> Back to Login
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
+    }
+    
+    <script>
+        // Auto-focus on OTP input
+        document.addEventListener('DOMContentLoaded', function() {
+            const otpInput = document.querySelector('input[name="OTP"]');
+            if (otpInput) {
+                otpInput.focus();
+                
+                // Only allow numbers
+                otpInput.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+        });
+    </script>
+}

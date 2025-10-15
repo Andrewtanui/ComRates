@@ -68,6 +68,7 @@ try
     builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
     builder.Services.AddScoped<IChatbotService, EnhancedChatbotService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
+    builder.Services.AddScoped<IOtpService, OtpService>();
 
     // SMTP Email
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
